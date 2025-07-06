@@ -1,0 +1,57 @@
+# File chứa thông tin nhạy cảm
+.env
+.env.*     # .env.production, .env.local, v.v.
+*.env
+
+# File cấu hình chứa key bí mật (nếu có)
+config.js
+config/*.js
+
+# # Thư mục dữ liệu MySQL nếu bind volume
+# database/
+# mysql_data/
+# db_data/
+
+# # Thư mục chứa mật khẩu hoặc backup database
+# *.sql
+# *.sql.gz
+# *.dump
+# *.bak
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Vite / Webpack
+dist/
+build/
+.cache/
+*.local
+
+# Docker
+docker-compose.override.yml
+docker-compose.prod.yml
+docker-compose.dev.yml
+
+# Logs
+*.log
+logs/
+*.pid
+
+# IDE/Editor
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Git secrets tool (nếu dùng)
+.git-credentials
+.gitattributes
+.githooks/
+
+# Lockfile (tuỳ chọn)
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
