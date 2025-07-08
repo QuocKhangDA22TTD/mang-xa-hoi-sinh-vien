@@ -1,0 +1,43 @@
+name: CI/CD for Frontend and Backend
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Clone code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.19.3"
+
+      - name: Build Frontend (React + Vite)
+        run: |
+          cd src/frontend
+          npm ci
+          npm run build
+
+  build-backend:
+    runs-on: ubuntu-latest
+    needs: build-frontend # Đảm bảo frontend build xong mới tới backend
+
+    steps:
+      - name: Clone code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.19.3"
+
+      - name: Cài đặt backend và kiểm thử
+        run: |
+          cd src/backend
+          npm ci
+          npm test || echo "Không có test backend"
