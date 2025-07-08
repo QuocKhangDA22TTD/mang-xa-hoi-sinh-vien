@@ -1,16 +1,12 @@
 const express = require('express');
 const app = express();
-const PORT = process.env.PORT || 5000;
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./docs/swagger');
 
-// Middleware để parse JSON body
-app.use(express.json());
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Route mặc định
-app.get('/', (req, res) => {
-    res.send('Hello World!');
-});
-
-// Start server
+const PORT = 3000;
 app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`);
 });
