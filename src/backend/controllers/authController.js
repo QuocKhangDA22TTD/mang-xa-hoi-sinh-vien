@@ -1,34 +1,34 @@
 require('dotenv').config();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const db = require('../db');
+const db = require('../config/db');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
-//REGISTER
+// REGISTER
 
 exports.register = async (req, res) => {
-  const { student_id, full_name, email, password } = req.body;
+  const { email, password } = req.body;
 
-  if (!student_id || !full_name || !email || !password) {
-    return res.status(400).json({ message: 'Missing required fields' });
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Missing email or password' });
   }
 
   try {
     const [existing] = await db.execute(
-      'SELECT id FROM users WHERE email = ? OR student_id = ?',
-      [email, student_id]
+      'SELECT id FROM users WHERE email = ?',
+      [email]
     );
 
     if (existing.length > 0) {
-      return res.status(409).json({ message: 'User already exists' });
+      return res.status(409).json({ message: 'Email already registered' });
     }
 
     const password_hash = await bcrypt.hash(password, 10);
 
     await db.execute(
-      'INSERT INTO users (student_id, full_name, email, password_hash) VALUES (?, ?, ?, ?)',
-      [student_id, full_name, email, password_hash]
+      'INSERT INTO users (email, password_hash) VALUES (?, ?)',
+      [email, password_hash]
     );
 
     return res.status(201).json({ message: 'Registered successfully' });
@@ -38,7 +38,7 @@ exports.register = async (req, res) => {
   }
 };
 
-//LOGIN
+// LOGIN
 
 exports.login = async (req, res) => {
   const { email, password } = req.body;
@@ -62,12 +62,7 @@ exports.login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      {
-        id: user.id,
-        student_id: user.student_id,
-        full_name: user.full_name,
-        email: user.email,
-      },
+      { id: user.id, email: user.email },
       JWT_SECRET,
       { expiresIn: '1h' }
     );
@@ -77,8 +72,6 @@ exports.login = async (req, res) => {
       token,
       user: {
         id: user.id,
-        student_id: user.student_id,
-        full_name: user.full_name,
         email: user.email,
       }
     });

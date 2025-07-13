@@ -1,12 +1,12 @@
-// import { useState } from 'react';
 import './App.css';
-
+import CreatePostPage from './pages/CreatePostPage';
+import RegisterPage from './pages/RegisterPage';
+import LoginPage from './pages/LoginPage';
 function App() {
-  // const [count, setCount] = useState(0);
-
   return (
     <>
-      <h1>Khởi tạo dự án</h1>
+      {/* <h1>Khởi tạo dự án</h1> */}
+      <LoginPage />
     </>
   );
 }
