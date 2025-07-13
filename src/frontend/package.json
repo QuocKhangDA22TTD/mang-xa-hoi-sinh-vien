@@ -7,17 +7,20 @@
     "dev": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint": "eslint src --ext .js,.jsx",
+    "lint:fix": "eslint src --ext .js,.jsx --fix",
     "format": "prettier --write ."
   },
   "dependencies": {
     "@tanstack/react-query": "^5.81.5",
     "axios": "^1.10.0",
+    "emoji-picker-react": "^4.12.3",
     "jwt-decode": "^4.0.0",
     "lucide-react": "^0.525.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.60.0",
+    "react-quill": "^2.0.0",
     "react-router-dom": "^7.6.3",
     "react-toastify": "^11.0.5",
     "zustand": "^5.0.6"
