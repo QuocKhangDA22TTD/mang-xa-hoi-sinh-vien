@@ -1,22 +1,19 @@
-// import { useState } from 'react';
 import './App.css';
-import Input from './components/Input';
-import { Button } from './components/Button';
-import { Card } from './components/Card';
-import {Modal} from './components/Modal';
-import {Toast} from './components/Toast';
-function App() {
-  // const [count, setCount] = useState(0);
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
+import CreatePostPage from './pages/CreatePostPage';
+import RegisterPage from './pages/RegisterPage';
+import LoginPage from './pages/LoginPage';
+
+function App() {
   return (
-    <>
-      <Input />
-      <Button children={'Đức tuổi'}/>
-      <Card/>
-      <Modal/>
-      <Toast/>
-      <h1>Khởi tạo dự án</h1>
-    </>
+    <Router>
+      <Routes>
+        <Route path="/" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/create-post" element={<CreatePostPage />} />
+      </Routes>
+    </Router>
   );
 }
 
