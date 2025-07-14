@@ -1,12 +1,33 @@
+require('dotenv').config(); // Đọc biến từ .env
+
 const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const authRoutes = require('./routes/authRoutes'); 
+const uploadRoutes = require('./routes/uploadRoutes');
+
 const app = express();
-const swaggerUi = require('swagger-ui-express');
-const swaggerSpec = require('./docs/swagger');
 
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+require('dotenv').config();
 
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`);
-});
+app.use(express.json());
+
+app.use(
+  cors({
+    origin: 'http://localhost:5173',
+    methods: ['GET', 'POST'],
+    credentials: true,
+  })
+);
+
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+const postRoutes = require('./routes/postRoutes');
+
+app.use('/api/posts', postRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/auth', authRoutes);
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
