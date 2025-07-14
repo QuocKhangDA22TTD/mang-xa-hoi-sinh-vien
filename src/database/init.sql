@@ -26,7 +26,7 @@ CREATE TABLE comments (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-INSERT INTO users (student_id, full_name, email, password_hash)
+INSERT INTO users (email, password_hash)
 VALUES 
-('SV001', N'Nguyễn Văn A', 'vana@example.com', 'hashedpassword1'),
-('SV002', N'Trần Thị B', 'thib@example.com', 'hashedpassword2');
+('vana@example.com', 'hashedpassword1'),
+('thib@example.com', 'hashedpassword2');
