@@ -24,8 +24,8 @@ services:
     restart: always
     ports:
       - "5000:5000"
-    env_file: 
-      - ./backend/.env  
+    env_file:
+      - ./backend/.env
     environment:
       DB_HOST: db
       DB_USER: ${MYSQL_USER}
@@ -36,8 +36,8 @@ services:
     volumes:
       - ./backend:/app
     command: npm start
-    networks:                    
-      - app-network            
+    networks:
+      - app-network
 
   frontend:
     build: ./frontend
