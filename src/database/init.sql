@@ -31,13 +31,11 @@ VALUES
 ('vana@example.com', 'hashedpassword1'),
 ('thib@example.com', 'hashedpassword2');
 
---Message
-
-CREATE TABLE conversations (
+CREATE TABLE conversations (   
   id INT AUTO_INCREMENT PRIMARY KEY,
   is_group BOOLEAN DEFAULT FALSE,
-  name VARCHAR(100),           -- tên nhóm nếu là group
-  admin_id INT,                -- ID người tạo nhóm
+  name VARCHAR(100),          
+  admin_id INT,               
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (admin_id) REFERENCES users(id) ON DELETE SET NULL
 );
