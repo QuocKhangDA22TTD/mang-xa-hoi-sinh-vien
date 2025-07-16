@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import CreatePostPage from './pages/CreatePostPage';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
+import HomePage from './layouts/HomePage';
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
         <Route path="/" element={<RegisterPage />} />
         <Route path="/register" element={<LoginPage />} />
         <Route path="/create-post" element={<CreatePostPage />} />
+        <Route path="test" element={<HomePage />} />
       </Routes>
     </Router>
   );
