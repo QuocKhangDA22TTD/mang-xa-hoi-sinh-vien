@@ -10,11 +10,36 @@ exports.createPost = async (userId, title, content) => {
 };
 
 exports.getAllPosts = async () => {
-  const [rows] = await db.execute('SELECT * FROM posts');
+  const [rows] = await db.execute(`
+    SELECT 
+      posts.id,
+      posts.title,
+      posts.content,
+      posts.created_at,
+      profile.full_name,
+      profile.avatar_url
+    FROM posts
+    JOIN profile ON posts.user_id = profile.user_id
+    ORDER BY posts.created_at DESC
+  `);
   return rows;
 };
 
 exports.getPostById = async (id) => {
-  const [rows] = await db.execute('SELECT * FROM posts WHERE id = ?', [id]);
+  const [rows] = await db.execute(
+    `
+    SELECT 
+      posts.id,
+      posts.title,
+      posts.content,
+      posts.created_at,
+      profile.full_name,
+      profile.avatar_url
+    FROM posts
+    JOIN profile ON posts.user_id = profile.user_id
+    WHERE posts.id = ?
+  `,
+    [id]
+  );
   return rows[0];
 };

@@ -27,11 +27,5 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 const postRoutes = require("./routes/postRoutes");
 
-app.use("/api/posts", postRoutes);
-app.use("/api/upload", uploadRoutes);
-app.use("/api/auth", authRoutes);
-
-app.use("/api/chat", chatRoutes);
-
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
