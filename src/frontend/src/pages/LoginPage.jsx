@@ -1,15 +1,18 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
 
 function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const navigate = useNavigate();
 
   const handleLogin = async () => {
     try {
       const res = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
+        credentials: 'include', // 🔒 gửi cookie
         headers: {
           'Content-Type': 'application/json',
         },
@@ -21,9 +24,13 @@ function LoginPage() {
       if (!res.ok) throw new Error(data.message || 'Đăng nhập thất bại');
 
       setMessage('Đăng nhập thành công!');
-      console.log(data); // chứa token + user info
       setEmail('');
       setPassword('');
+
+      // ✅ Chuyển hướng sau khi đăng nhập
+      setTimeout(() => {
+        navigate('/create-post');
+      }, 1000);
     } catch (err) {
       console.error(err);
       setMessage(err.message || 'Đăng nhập thất bại');
@@ -37,7 +44,11 @@ function LoginPage() {
         <div className="flex flex-col justify-center items-center w-[40%] bg-[#0582CA]">
           <div className="bg-[#EEE] w-[6rem] h-[6rem] rounded-full flex items-center justify-center">
             <div className="text-center font-semibold text-xs text-black">
-              <img src="../../public/demo_avatar.jpg" alt="Logo" className="w-8 h-8 mx-auto mb-1" />
+              <img
+                src="../../public/demo_avatar.jpg" 
+                alt="Logo"
+                className="w-8 h-8 mx-auto mb-1"
+              />
               CHÉMNET
             </div>
           </div>
