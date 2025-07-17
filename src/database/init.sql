@@ -7,6 +7,16 @@ CREATE TABLE users (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE profile (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT UNIQUE,
+  full_name NVARCHAR(100),
+  bio TEXT,
+  avatar_url VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 CREATE TABLE posts (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT,
@@ -25,11 +35,6 @@ CREATE TABLE comments (
   FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
-
-INSERT INTO users (email, password_hash)
-VALUES 
-('vana@example.com', 'hashedpassword1'),
-('thib@example.com', 'hashedpassword2');
 
 CREATE TABLE conversations (   
   id INT AUTO_INCREMENT PRIMARY KEY,
@@ -75,3 +80,19 @@ CREATE TABLE message_reads (
   FOREIGN KEY (message_id) REFERENCES messages(id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+
+INSERT INTO users (email, password_hash)
+VALUES 
+('vana@example.com', 'hashedpassword1'),
+('thib@example.com', 'hashedpassword2');
+
+INSERT INTO profile (user_id, full_name, bio, avatar_url) VALUES
+(1, N'Nguyễn Văn A', N'Sinh viên yêu thích lập trình web và game.', 'http://localhost:5000/uploads/1752728364665-user_1.png'),
+(2, N'Trần Thị B', N'Tôi thích học React, Node.js và phát triển game bằng Unity.', 'http://localhost:5000/uploads/1752728522231-user_2.jpg');
+
+INSERT INTO posts (user_id, title, content) VALUES
+(1, N'Giới thiệu về bản thân', N'Xin chào, tôi là sinh viên đam mê lập trình.'),
+(2, N'Chia sẻ tài liệu học lập trình', N'Tôi sẽ chia sẻ một số tài liệu học HTML, CSS và JavaScript.'),
+(1, N'Hướng dẫn cài đặt MySQL', N'Trong bài viết này, tôi sẽ hướng dẫn cách cài đặt MySQL trên Windows.'),
+(2, N'Kinh nghiệm học ReactJS', N'ReactJS giúp việc xây dựng giao diện web trở nên hiệu quả hơn.'),
+(1, N'Tạo API với Node.js', N'Bài viết hướng dẫn cách tạo một REST API cơ bản bằng Node.js và Express.');
