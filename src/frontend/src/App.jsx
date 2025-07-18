@@ -7,6 +7,7 @@ import LoginPage from './pages/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import HomePage from './layouts/HomePage';
 import ChatPage from './pages/ChatPage';
+import FriendsPage from './pages/FriendsPage';
 
 import { SocketProvider } from './context/SocketContext';
 import { AuthProvider } from './context/AuthContext';
@@ -25,6 +26,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ChatPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/friends"
+              element={
+                <ProtectedRoute>
+                  <FriendsPage />
                 </ProtectedRoute>
               }
             />

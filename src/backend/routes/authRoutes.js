@@ -18,7 +18,4 @@ router.get('/me', verifyToken, (req, res) => {
   });
 });
 
-// Route lấy danh sách tất cả users (để tạo chat)
-router.get('/users', verifyToken, authController.getAllUsers);
-
 module.exports = router;
