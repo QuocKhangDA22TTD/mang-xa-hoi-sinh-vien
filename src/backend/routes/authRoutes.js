@@ -14,7 +14,7 @@ router.post('/logout', authController.logout);
 router.get('/me', verifyToken, (req, res) => {
   res.json({
     message: 'You are authenticated',
-    user: req.user, // đã được gán trong middleware verifyToken
+    user: req.user,
   });
 });
 
