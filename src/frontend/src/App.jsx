@@ -6,30 +6,40 @@ import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import HomePage from './layouts/HomePage';
-import ChatPage from './pages/ChatTestPage';
+import ChatPage from './pages/ChatPage';
 
 import { SocketProvider } from './context/SocketContext';
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
   return (
-    <SocketProvider>
-      <Router>
-        <Routes>
-          <Route path="/" element={<RegisterPage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/newsfeed" element={<HomePage />} />
-          <Route path="/chat" element={<ChatPage />} />
-          <Route
-            path="/create-post"
-            element={
-              <ProtectedRoute>
-                <CreatePostPage />
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </Router>
-    </SocketProvider>
+    <AuthProvider>
+      <SocketProvider>
+        <Router>
+          <Routes>
+            <Route path="/" element={<RegisterPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/newsfeed" element={<HomePage />} />
+            <Route
+              path="/chat"
+              element={
+                <ProtectedRoute>
+                  <ChatPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/create-post"
+              element={
+                <ProtectedRoute>
+                  <CreatePostPage />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </Router>
+      </SocketProvider>
+    </AuthProvider>
   );
 }
 
