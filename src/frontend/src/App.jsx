@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import CreatePostPage from './pages/CreatePostPage';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
-import ProtectedRoute from './components/ProtectedRoute'; 
+import ProtectedRoute from './components/ProtectedRoute';
 import HomePage from './layouts/HomePage';
 
 function App() {
@@ -13,8 +13,15 @@ function App() {
       <Routes>
         <Route path="/" element={<RegisterPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/create-post" element={<CreatePostPage />} />
         <Route path="newsfeed" element={<HomePage />} />
+        <Route
+          path="/create-post"
+          element={
+            <ProtectedRoute>
+              <CreatePostPage />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </Router>
   );
