@@ -9,6 +9,7 @@ const authRoutes = require('./routes/authRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const chatRoutes = require('./routes/chat.routes');
 const postRoutes = require('./routes/postRoutes');
+const friendRoutes = require('./routes/friend.routes');
 const setupSocket = require('./sockets/socket');
 
 const app = express();
@@ -20,7 +21,7 @@ app.use(cookieParser());
 app.use(
   cors({
     origin: 'http://localhost:5173',
-    methods: ['GET', 'POST'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
   })
 );
@@ -30,7 +31,8 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/posts', postRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/chat', chatRoutes); // <-- bạn bị thiếu dòng này
+app.use('/api/chat', chatRoutes);
+app.use('/api/friends', friendRoutes);
 
 // Khởi chạy socket.io
 const io = require('socket.io')(server, {
