@@ -47,17 +47,30 @@ export async function getReceivedRequests() {
 
 // Chấp nhận lời mời kết bạn
 export async function acceptFriendRequest(requestId) {
-  const res = await fetch(`${API_BASE}/requests/${requestId}/accept`, {
-    method: 'PUT',
-    credentials: 'include',
-  });
+  console.log('🔍 Calling acceptFriendRequest:', requestId);
+  console.log('🔍 URL:', `${API_BASE}/requests/${requestId}/accept`);
 
-  if (!res.ok) {
-    const error = await res.json();
-    throw new Error(error.message || 'Không chấp nhận được lời mời kết bạn');
+  try {
+    const res = await fetch(`${API_BASE}/requests/${requestId}/accept`, {
+      method: 'PUT',
+      credentials: 'include',
+    });
+
+    console.log('🔍 Response status:', res.status);
+
+    if (!res.ok) {
+      const error = await res.json();
+      console.error('🔍 API Error:', error);
+      throw new Error(error.message || 'Không chấp nhận được lời mời kết bạn');
+    }
+
+    const result = await res.json();
+    console.log('🔍 Success result:', result);
+    return result;
+  } catch (error) {
+    console.error('🔍 Fetch Error:', error);
+    throw error;
   }
-
-  return res.json();
 }
 
 // Từ chối lời mời kết bạn

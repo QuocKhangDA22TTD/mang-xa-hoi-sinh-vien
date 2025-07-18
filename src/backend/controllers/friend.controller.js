@@ -6,15 +6,26 @@ exports.sendFriendRequest = async (req, res) => {
   const sender_id = req.user.id;
 
   try {
+    // Kiểm tra receiver_id có hợp lệ không
+    if (!receiver_id || isNaN(receiver_id)) {
+      return res.status(400).json({ message: 'ID người nhận không hợp lệ' });
+    }
+
+    // Chuyển đổi sang số
+    const receiverIdNum = parseInt(receiver_id);
+    const senderIdNum = parseInt(sender_id);
+
     // Kiểm tra không thể gửi lời mời cho chính mình
-    if (sender_id === receiver_id) {
-      return res.status(400).json({ message: 'Không thể gửi lời mời kết bạn cho chính mình' });
+    if (senderIdNum === receiverIdNum) {
+      return res
+        .status(400)
+        .json({ message: 'Không thể gửi lời mời kết bạn cho chính mình' });
     }
 
     // Kiểm tra người nhận có tồn tại không
     const [receiverExists] = await db.execute(
       'SELECT id FROM users WHERE id = ?',
-      [receiver_id]
+      [receiverIdNum]
     );
     if (receiverExists.length === 0) {
       return res.status(404).json({ message: 'Người dùng không tồn tại' });
@@ -22,10 +33,10 @@ exports.sendFriendRequest = async (req, res) => {
 
     // Kiểm tra đã là bạn bè chưa
     const [existingFriendship] = await db.execute(
-      `SELECT * FROM friend_requests 
-       WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)) 
+      `SELECT * FROM friend_requests
+       WHERE ((sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?))
        AND status = 'accepted'`,
-      [sender_id, receiver_id, receiver_id, sender_id]
+      [senderIdNum, receiverIdNum, receiverIdNum, senderIdNum]
     );
     if (existingFriendship.length > 0) {
       return res.status(400).json({ message: 'Đã là bạn bè' });
@@ -34,7 +45,7 @@ exports.sendFriendRequest = async (req, res) => {
     // Kiểm tra đã gửi lời mời chưa
     const [existingRequest] = await db.execute(
       'SELECT * FROM friend_requests WHERE sender_id = ? AND receiver_id = ? AND status = "pending"',
-      [sender_id, receiver_id]
+      [senderIdNum, receiverIdNum]
     );
     if (existingRequest.length > 0) {
       return res.status(400).json({ message: 'Đã gửi lời mời kết bạn' });
@@ -43,25 +54,48 @@ exports.sendFriendRequest = async (req, res) => {
     // Kiểm tra có lời mời ngược lại không
     const [reverseRequest] = await db.execute(
       'SELECT * FROM friend_requests WHERE sender_id = ? AND receiver_id = ? AND status = "pending"',
-      [receiver_id, sender_id]
+      [receiverIdNum, senderIdNum]
     );
     if (reverseRequest.length > 0) {
-      return res.status(400).json({ message: 'Người này đã gửi lời mời kết bạn cho bạn' });
+      return res
+        .status(400)
+        .json({ message: 'Người này đã gửi lời mời kết bạn cho bạn' });
     }
 
     // Tạo lời mời kết bạn mới
     const [result] = await db.execute(
       'INSERT INTO friend_requests (sender_id, receiver_id) VALUES (?, ?)',
-      [sender_id, receiver_id]
+      [senderIdNum, receiverIdNum]
     );
 
-    res.status(201).json({ 
+    res.status(201).json({
       message: 'Gửi lời mời kết bạn thành công',
-      requestId: result.insertId 
+      requestId: result.insertId,
     });
   } catch (error) {
     console.error('❌ Lỗi gửi lời mời kết bạn:', error);
-    res.status(500).json({ message: 'Lỗi server' });
+
+    // Kiểm tra lỗi foreign key constraint
+    if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+      return res.status(400).json({
+        message: 'Người dùng không tồn tại trong hệ thống',
+        error: 'INVALID_USER_ID',
+      });
+    }
+
+    // Kiểm tra lỗi duplicate entry
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({
+        message: 'Lời mời kết bạn đã tồn tại',
+        error: 'DUPLICATE_REQUEST',
+      });
+    }
+
+    res.status(500).json({
+      message: 'Lỗi server',
+      error: error.message,
+      code: error.code,
+    });
   }
 };
 
@@ -118,6 +152,8 @@ exports.acceptFriendRequest = async (req, res) => {
   const { request_id } = req.params;
   const receiver_id = req.user.id;
 
+  console.log('🔍 Accept friend request:', { request_id, receiver_id });
+
   try {
     // Kiểm tra lời mời có tồn tại và thuộc về user hiện tại không
     const [request] = await db.execute(
@@ -126,7 +162,9 @@ exports.acceptFriendRequest = async (req, res) => {
     );
 
     if (request.length === 0) {
-      return res.status(404).json({ message: 'Lời mời kết bạn không tồn tại hoặc đã được xử lý' });
+      return res
+        .status(404)
+        .json({ message: 'Lời mời kết bạn không tồn tại hoặc đã được xử lý' });
     }
 
     // Cập nhật trạng thái thành accepted
@@ -155,7 +193,9 @@ exports.declineFriendRequest = async (req, res) => {
     );
 
     if (request.length === 0) {
-      return res.status(404).json({ message: 'Lời mời kết bạn không tồn tại hoặc đã được xử lý' });
+      return res
+        .status(404)
+        .json({ message: 'Lời mời kết bạn không tồn tại hoặc đã được xử lý' });
     }
 
     // Cập nhật trạng thái thành declined
@@ -228,7 +268,9 @@ exports.unfriend = async (req, res) => {
     );
 
     if (friendship.length === 0) {
-      return res.status(404).json({ message: 'Không tìm thấy mối quan hệ bạn bè' });
+      return res
+        .status(404)
+        .json({ message: 'Không tìm thấy mối quan hệ bạn bè' });
     }
 
     // Xóa mối quan hệ bạn bè
@@ -267,8 +309,14 @@ exports.getAllUsers = async (req, res) => {
          (fr1.sender_id = ? AND fr1.receiver_id = u.id))
       WHERE u.id != ?
     `;
-    
-    let params = [current_user_id, current_user_id, current_user_id, current_user_id, current_user_id];
+
+    let params = [
+      current_user_id,
+      current_user_id,
+      current_user_id,
+      current_user_id,
+      current_user_id,
+    ];
 
     if (search) {
       query += ` AND (u.email LIKE ? OR p.full_name LIKE ?)`;
