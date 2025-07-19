@@ -8,6 +8,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 import HomePage from './layouts/HomePage';
 import ChatPage from './pages/ChatPage';
 import FriendsPage from './pages/FriendsPage';
+import CreateAPersonalProfile from './pages/CreateAPersonalProfile';
+import EditUserProfile from './pages/EditUserProfile';
+import PersonalProfile from './pages/PersonalProfile';
 
 import { SocketProvider } from './context/SocketContext';
 import { AuthProvider } from './context/AuthContext';
@@ -21,6 +24,9 @@ function App() {
             <Route path="/" element={<RegisterPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/newsfeed" element={<HomePage />} />
+            <Route path="/create-profile" element={<CreateAPersonalProfile />} />
+            <Route path="/update-profile" element={<EditUserProfile />} />          
+            <Route path="/persona-profile" element={<PersonalProfile />} />
             <Route
               path="/chat"
               element={
