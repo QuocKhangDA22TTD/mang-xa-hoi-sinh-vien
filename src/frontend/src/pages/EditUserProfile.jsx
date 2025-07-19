@@ -8,28 +8,32 @@ const Button = ({ children, onClick, className }) => (
 );
 
 const Input = ({ value, onChange, className, placeholder }) => (
-  <input 
-    value={value} 
-    onChange={onChange} 
+  <input
+    value={value}
+    onChange={onChange}
     className={className}
     placeholder={placeholder}
   />
 );
 
 const Toast = ({ message, onClose, type }) => (
-  <div className={`fixed top-4 right-4 p-4 rounded-lg text-white ${
-    type === 'success' ? 'bg-green-500' : 'bg-red-500'
-  }`}>
+  <div
+    className={`fixed top-4 right-4 p-4 rounded-lg text-white ${
+      type === 'success' ? 'bg-green-500' : 'bg-red-500'
+    }`}
+  >
     {message}
-    <button onClick={onClose} className="ml-2 font-bold">×</button>
+    <button onClick={onClose} className="ml-2 font-bold">
+      ×
+    </button>
   </div>
 );
 
 const Avatar = ({ className, src, onImageChange }) => (
   <div className={className}>
-    <img 
-      src={src} 
-      alt="avatar" 
+    <img
+      src={src}
+      alt="avatar"
       className="w-full h-full object-cover rounded-full"
     />
     <input
@@ -77,7 +81,7 @@ function EditUserProfile() {
   const handleUpdate = async () => {
     try {
       // Simulation d'une requête API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       setMessage('Cập nhật thành công');
     } catch (err) {
       setMessage(err.message || 'Cập nhật thất bại');
@@ -114,8 +118,8 @@ function EditUserProfile() {
           {/* Avatar positioned over cover */}
           <div className="relative -mt-12 mb-6">
             <div className="relative inline-block">
-              <Avatar 
-                className="w-[80px] h-[80px] rounded-full border-4 border-white shadow-lg" 
+              <Avatar
+                className="w-[80px] h-[80px] rounded-full border-4 border-white shadow-lg"
                 src={avatarUrl}
                 onImageChange={handleAvatarChange}
               />
@@ -145,7 +149,9 @@ function EditUserProfile() {
           {/* Info Fields */}
           <div className="space-y-4 mb-6">
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <label className="text-sm text-[#8E8E8E] min-w-[80px]">Sinh nhật:</label>
+              <label className="text-sm text-[#8E8E8E] min-w-[80px]">
+                Sinh nhật:
+              </label>
               <Input
                 value={birthday}
                 onChange={(e) => setBirthday(e.target.value)}
@@ -153,9 +159,11 @@ function EditUserProfile() {
               />
               <span className="text-gray-400 ml-2">✎</span>
             </div>
-            
+
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <label className="text-sm text-[#8E8E8E] min-w-[80px]">Địa chỉ:</label>
+              <label className="text-sm text-[#8E8E8E] min-w-[80px]">
+                Địa chỉ:
+              </label>
               <Input
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
