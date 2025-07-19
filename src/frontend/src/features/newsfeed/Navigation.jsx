@@ -1,11 +1,11 @@
 import CustomLink from '../../components/CustomLink';
 
-function Navigation() {
+function Navigation({ setCurrentView }) {
   return (
     <>
       <CustomLink
         className="text-[3rem]"
-        to={'/test'}
+        onClick={() => setCurrentView('newsfeed')}
         iconName={'FaHome'}
         iconLib="fa"
       />
