@@ -14,7 +14,9 @@ CREATE TABLE profile (
   bio TEXT,
   avatar_url VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  FOREIGN KEY (user_id) REFERENCES users(id)
+      ON DELETE CASCADE 
+      ON UPDATE CASCADE
 );
 
 CREATE TABLE posts (

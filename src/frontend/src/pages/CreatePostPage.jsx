@@ -5,18 +5,20 @@ import EmojiPicker from 'emoji-picker-react';
 import PostTitle from '../features/post/PostTitle';
 import Avatar from '../features/post/Avatar';
 import Button from '../components/Button';
+import useUserProfile from '../hooks/useUserProfile';
 
 function CreatePostPage() {
   const [value, setValue] = useState('');
   const [title, setTitle] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const { user, profile, loading } = useUserProfile();
 
   const quillRef = useRef();
   const fileInputRef = useRef();
 
   const handleSubmitPost = async () => {
     const postData = {
-      user_id: 1,
+      user_id: user.id,
       title: title,
       content: value,
     };
@@ -99,10 +101,12 @@ function CreatePostPage() {
     ],
   };
 
+  if (loading) return <p>Đang tải dữ liệu...</p>;
+
   return (
-    <div className="w-full h-[40rem] bg-gradient-to-b from-[#FFFFFF] to-[#00A6FB]">
+    <div className="w-[100%] h-[100%] bg-gradient-to-b from-[#FFFFFF] to-[#00A6FB]">
       <div className="flex gap-x-4 justify-center items-center w-full h-[20%] bg-[#0582CA]">
-        <Avatar />
+        <Avatar avatarUrl={profile.avatar_url} />
         <PostTitle title={title} setTitle={setTitle} />
       </div>
 
