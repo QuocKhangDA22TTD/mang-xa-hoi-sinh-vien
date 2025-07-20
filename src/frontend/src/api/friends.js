@@ -2,6 +2,17 @@
 
 const API_BASE = 'http://localhost:5000/api/friends';
 
+// Lấy danh sách bạn bè
+export async function getFriends() {
+  const res = await fetch(`${API_BASE}/friends`, {
+    credentials: 'include',
+  });
+
+  if (!res.ok) throw new Error('Không lấy được danh sách bạn bè');
+
+  return res.json();
+}
+
 // Gửi lời mời kết bạn
 export async function sendFriendRequest(receiverId) {
   const res = await fetch(`${API_BASE}/requests`, {
@@ -84,17 +95,6 @@ export async function declineFriendRequest(requestId) {
     const error = await res.json();
     throw new Error(error.message || 'Không từ chối được lời mời kết bạn');
   }
-
-  return res.json();
-}
-
-// Lấy danh sách bạn bè
-export async function getFriends() {
-  const res = await fetch(`${API_BASE}/friends`, {
-    credentials: 'include',
-  });
-
-  if (!res.ok) throw new Error('Không lấy được danh sách bạn bè');
 
   return res.json();
 }

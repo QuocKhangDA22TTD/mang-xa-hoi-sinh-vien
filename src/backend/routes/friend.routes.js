@@ -6,6 +6,14 @@ const verifyToken = require('../middleware/verifyToken');
 // Tất cả routes đều cần authentication
 router.use(verifyToken);
 
+// Lấy danh sách bạn bè
+router.get('/friends', friendController.getFriends);
+
+module.exports = router;
+
+// Tất cả routes đều cần authentication
+router.use(verifyToken);
+
 // Gửi lời mời kết bạn
 router.post('/requests', friendController.sendFriendRequest);
 
@@ -16,10 +24,16 @@ router.get('/requests/sent', friendController.getSentRequests);
 router.get('/requests/received', friendController.getReceivedRequests);
 
 // Chấp nhận lời mời kết bạn
-router.put('/requests/:request_id/accept', friendController.acceptFriendRequest);
+router.put(
+  '/requests/:request_id/accept',
+  friendController.acceptFriendRequest
+);
 
 // Từ chối lời mời kết bạn
-router.put('/requests/:request_id/decline', friendController.declineFriendRequest);
+router.put(
+  '/requests/:request_id/decline',
+  friendController.declineFriendRequest
+);
 
 // Lấy danh sách bạn bè
 router.get('/friends', friendController.getFriends);

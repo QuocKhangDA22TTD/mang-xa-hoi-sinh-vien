@@ -1,5 +1,47 @@
 const db = require('../config/db');
 
+// Lấy danh sách bạn bè
+exports.getFriends = async (req, res) => {
+  const user_id = req.user.id;
+
+  try {
+    const [friends] = await db.execute(
+      `SELECT DISTINCT
+              CASE
+                WHEN fr.sender_id = ? THEN u2.id
+                ELSE u1.id
+              END as friend_id,
+              CASE
+                WHEN fr.sender_id = ? THEN u2.email
+                ELSE u1.email
+              END as friend_email,
+              CASE
+                WHEN fr.sender_id = ? THEN p2.full_name
+                ELSE p1.full_name
+              END as friend_name,
+              CASE
+                WHEN fr.sender_id = ? THEN p2.avatar_url
+                ELSE p1.avatar_url
+              END as friend_avatar,
+              fr.updated_at as became_friends_at
+       FROM friend_requests fr
+       JOIN users u1 ON fr.sender_id = u1.id
+       JOIN users u2 ON fr.receiver_id = u2.id
+       LEFT JOIN profile p1 ON u1.id = p1.user_id
+       LEFT JOIN profile p2 ON u2.id = p2.user_id
+       WHERE (fr.sender_id = ? OR fr.receiver_id = ?)
+       AND fr.status = 'accepted'
+       ORDER BY fr.updated_at DESC`,
+      [user_id, user_id, user_id, user_id, user_id, user_id]
+    );
+
+    res.json(friends);
+  } catch (error) {
+    console.error('❌ Lỗi lấy danh sách bạn bè:', error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+};
+
 // Gửi lời mời kết bạn
 exports.sendFriendRequest = async (req, res) => {
   const { receiver_id } = req.body;
@@ -207,48 +249,6 @@ exports.declineFriendRequest = async (req, res) => {
     res.json({ message: 'Từ chối lời mời kết bạn thành công' });
   } catch (error) {
     console.error('❌ Lỗi từ chối lời mời kết bạn:', error);
-    res.status(500).json({ message: 'Lỗi server' });
-  }
-};
-
-// Lấy danh sách bạn bè
-exports.getFriends = async (req, res) => {
-  const user_id = req.user.id;
-
-  try {
-    const [friends] = await db.execute(
-      `SELECT DISTINCT
-              CASE 
-                WHEN fr.sender_id = ? THEN u2.id
-                ELSE u1.id
-              END as friend_id,
-              CASE 
-                WHEN fr.sender_id = ? THEN u2.email
-                ELSE u1.email
-              END as friend_email,
-              CASE 
-                WHEN fr.sender_id = ? THEN p2.full_name
-                ELSE p1.full_name
-              END as friend_name,
-              CASE 
-                WHEN fr.sender_id = ? THEN p2.avatar_url
-                ELSE p1.avatar_url
-              END as friend_avatar,
-              fr.updated_at as became_friends_at
-       FROM friend_requests fr
-       JOIN users u1 ON fr.sender_id = u1.id
-       JOIN users u2 ON fr.receiver_id = u2.id
-       LEFT JOIN profile p1 ON u1.id = p1.user_id
-       LEFT JOIN profile p2 ON u2.id = p2.user_id
-       WHERE (fr.sender_id = ? OR fr.receiver_id = ?) 
-       AND fr.status = 'accepted'
-       ORDER BY fr.updated_at DESC`,
-      [user_id, user_id, user_id, user_id, user_id, user_id]
-    );
-
-    res.json(friends);
-  } catch (error) {
-    console.error('❌ Lỗi lấy danh sách bạn bè:', error);
     res.status(500).json({ message: 'Lỗi server' });
   }
 };

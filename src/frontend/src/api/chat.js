@@ -44,21 +44,51 @@ export async function sendMessage(conversationId, text) {
 }
 
 // Tạo cuộc trò chuyện mới
-export async function createConversation(memberIds, isGroup = false, name = null) {
-  const res = await fetch(`${API_BASE}/conversations`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    credentials: 'include',
-    body: JSON.stringify({
-      member_ids: memberIds,
-      is_group: isGroup,
-      name,
-    }),
+export async function createConversation(
+  memberIds,
+  isGroup = false,
+  name = null
+) {
+  console.log('🔍 API createConversation called with:', {
+    memberIds,
+    isGroup,
+    name,
   });
 
-  if (!res.ok) throw new Error('Không tạo được cuộc trò chuyện');
+  const requestBody = {
+    member_ids: memberIds,
+    is_group: isGroup,
+    name,
+  };
 
-  return res.json();
+  console.log('🔍 Request body:', requestBody);
+  console.log('🔍 URL:', `${API_BASE}/conversations`);
+
+  try {
+    const res = await fetch(`${API_BASE}/conversations`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify(requestBody),
+    });
+
+    console.log('🔍 Response status:', res.status);
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error('🔍 API Error response:', errorText);
+      throw new Error(
+        `Không tạo được cuộc trò chuyện: ${res.status} ${errorText}`
+      );
+    }
+
+    const result = await res.json();
+    console.log('🔍 API Success result:', result);
+    return result;
+  } catch (error) {
+    console.error('🔍 Fetch Error:', error);
+    throw error;
+  }
 }
