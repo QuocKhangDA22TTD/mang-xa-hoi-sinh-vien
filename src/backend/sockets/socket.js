@@ -1,5 +1,3 @@
-const messageService = require('../services/message.service');
-
 function socketHandler(io) {
   io.on('connection', (socket) => {
     console.log('✅ Socket connected:', socket.id);
@@ -10,27 +8,32 @@ function socketHandler(io) {
       console.log(`👤 User ${userId} joined room`);
     });
 
-    // Khi client gửi tin nhắn
-    socket.on('send_message', async (data) => {
-      const { conversation_id, sender_id, text, receiver_id } = data;
+    // Khi client gửi tin nhắn (chỉ để broadcast, không lưu DB)
+    socket.on('broadcast_message', (messageData) => {
+      console.log('🔍 Socket broadcasting message:', messageData);
 
-      try {
-        // 1. Lưu tin nhắn vào DB qua service
-        const savedMessage = await messageService.saveMessage({
-          conversation_id,
-          sender_id,
-          text,
-        });
-
-        // 2. Gửi tin nhắn đến người nhận
-        io.to(receiver_id).emit('receive_message', savedMessage);
-
-        // 3. Gửi lại chính sender để cập nhật giao diện
-        socket.emit('receive_message', savedMessage);
-      } catch (err) {
-        console.error('❌ Lỗi khi lưu tin nhắn:', err);
-        socket.emit('error_message', 'Không gửi được tin nhắn');
+      // Gửi tin nhắn đến người nhận (nếu có receiver_id)
+      if (messageData.receiver_id) {
+        io.to(messageData.receiver_id.toString()).emit(
+          'receive_message',
+          messageData
+        );
+        console.log(
+          '🔍 Message sent to receiver room:',
+          messageData.receiver_id
+        );
       }
+
+      // Gửi đến tất cả members trong conversation (backup)
+      io.to(`conversation_${messageData.conversation_id}`).emit(
+        'receive_message',
+        messageData
+      );
+
+      console.log(
+        '🔍 Message broadcasted to conversation:',
+        messageData.conversation_id
+      );
     });
 
     socket.on('disconnect', () => {
