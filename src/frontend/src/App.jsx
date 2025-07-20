@@ -24,6 +24,9 @@ function App() {
             <Route path="/" element={<RegisterPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/newsfeed" element={<HomePage />} />
+            <Route path="/create-profile" element={<CreateAPersonalProfile />} />
+            <Route path="/update-profile" element={<EditUserProfile />} />          
+            <Route path="/persona-profile" element={<PersonalProfile />} />
             <Route
               path="/create-profile"
               element={<CreateAPersonalProfile />}
