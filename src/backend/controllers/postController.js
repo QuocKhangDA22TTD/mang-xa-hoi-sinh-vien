@@ -10,18 +10,18 @@ const getAllPosts = async (req, res) => {
   }
 };
 
-const getPostById = async (req, res) => {
+const getPostsByUserId = async (req, res) => {
   try {
-    const postId = req.params.id;
-    const post = await postModel.getPostById(postId);
+    const userId = req.params.id;
+    const posts = await postModel.getPostsByUserId(userId);
 
-    if (!post) {
-      return res.status(404).json({ message: 'Post not found' });
+    if (!posts || posts.length === 0) {
+      return res.status(404).json({ message: 'No posts found for this user' });
     }
 
-    res.status(200).json(post);
+    res.status(200).json(posts);
   } catch (err) {
-    console.error('Error getting post by id:', err);
+    console.error('Error getting posts by user id:', err);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -50,4 +50,4 @@ const createPost = async (req, res) => {
   }
 };
 
-module.exports = { getAllPosts, getPostById, createPost };
+module.exports = { getAllPosts, getPostsByUserId, createPost };

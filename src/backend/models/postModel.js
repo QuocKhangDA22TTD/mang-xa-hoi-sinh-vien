@@ -25,11 +25,12 @@ exports.getAllPosts = async () => {
   return rows;
 };
 
-exports.getPostById = async (id) => {
+exports.getPostsByUserId = async (user_id) => {
   const [rows] = await db.execute(
     `
     SELECT 
       posts.id,
+      posts.user_id,
       posts.title,
       posts.content,
       posts.created_at,
@@ -37,9 +38,9 @@ exports.getPostById = async (id) => {
       profile.avatar_url
     FROM posts
     JOIN profile ON posts.user_id = profile.user_id
-    WHERE posts.id = ?
+    WHERE posts.user_id = ?
   `,
-    [id]
+    [user_id]
   );
-  return rows[0];
+  return rows;
 };

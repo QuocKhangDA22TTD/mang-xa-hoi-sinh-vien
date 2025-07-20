@@ -8,6 +8,6 @@ router.post('/', verifyToken, postController.createPost);
 
 // 👁️ Công khai: ai cũng xem được danh sách và chi tiết bài viết
 router.get('/', postController.getAllPosts);
-router.get('/:id', postController.getPostById);
+router.get('/:id', postController.getPostsByUserId);
 
 module.exports = router;

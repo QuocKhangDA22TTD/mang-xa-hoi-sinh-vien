@@ -11,6 +11,9 @@ CREATE TABLE profile (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT UNIQUE,
   full_name NVARCHAR(100),
+  nickname VARCHAR(100),
+  birthday DATE,
+  address VARCHAR(255),
   bio TEXT,
   avatar_url VARCHAR(255),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -91,12 +94,12 @@ VALUES
 ('phamd@example.com', 'hashedpassword4'),
 ('hoange@example.com', 'hashedpassword5');
 
-INSERT INTO profile (user_id, full_name, bio, avatar_url) VALUES
-(1, N'Nguyễn Văn A', N'Sinh viên yêu thích lập trình web và game.', 'http://localhost:5000/uploads/1752728364665-user_1.png'),
-(2, N'Trần Thị B', N'Tôi thích học React, Node.js và phát triển game bằng Unity.', 'http://localhost:5000/uploads/1752728522231-user_2.jpg'),
-(3, N'Lê Văn C', N'Đam mê AI và Machine Learning.', 'demo_avatar.jpg'),
-(4, N'Phạm Thị D', N'Yêu thích thiết kế UI/UX.', 'demo_avatar.jpg'),
-(5, N'Hoàng Văn E', N'Chuyên gia về DevOps và Cloud.', 'demo_avatar.jpg');
+INSERT INTO profile (user_id, full_name, nickname, birthday, address, bio, avatar_url) VALUES
+(1, N'Nguyễn Văn A', 'VanA', '2002-05-10', 'Hà Nội', N'Sinh viên yêu thích lập trình web và game.', 'http://localhost:5000/uploads/1752728364665-user_1.png'),
+(2, N'Trần Thị B', 'ThiB', '2001-08-22', 'TP. HCM', N'Tôi thích học React, Node.js và phát triển game bằng Unity.', 'http://localhost:5000/uploads/1752728522231-user_2.jpg'),
+(3, N'Lê Văn C', 'VanC', '2000-11-03', 'Đà Nẵng', N'Đam mê AI và Machine Learning.', 'demo_avatar.jpg'),
+(4, N'Phạm Thị D', 'ThiD', '2003-02-15', 'Hải Phòng', N'Yêu thích thiết kế UI/UX.', 'demo_avatar.jpg'),
+(5, N'Hoàng Văn E', 'VanE', '1999-09-29', 'Cần Thơ', N'Chuyên gia về DevOps và Cloud.', 'demo_avatar.jpg');
 
 INSERT INTO posts (user_id, title, content) VALUES
 (1, N'Giới thiệu về bản thân', N'Xin chào, tôi là sinh viên đam mê lập trình.'),
@@ -117,7 +120,7 @@ CREATE TABLE friend_requests (
   FOREIGN KEY (receiver_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Thêm một số dữ liệu mẫu cho friend_requests
+-- Dữ liệu mẫu cho friend_requests
 INSERT INTO friend_requests (sender_id, receiver_id, status) VALUES
 (1, 2, 'accepted'),  -- A và B đã là bạn
 (3, 1, 'pending'),   -- C gửi lời mời cho A
