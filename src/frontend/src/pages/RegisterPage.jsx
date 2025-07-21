@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import Button from '../components/Button';
+import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rePassword, setRePassword] = useState('');
+  const navigate = useNavigate();
 
   const handleRegister = async () => {
     if (password !== rePassword) {
@@ -27,6 +30,7 @@ function RegisterPage() {
       setEmail('');
       setPassword('');
       setRePassword('');
+      navigate('/login');
     } catch (err) {
       console.error(err);
       alert('Lỗi khi đăng ký');
@@ -38,7 +42,9 @@ function RegisterPage() {
       <div className="flex rounded-[2rem] overflow-hidden shadow-2xl w-[45rem] h-[25rem] bg-white">
         {/* Phần form */}
         <div className="flex flex-col flex-1 px-8 py-6">
-          <h1 className="text-center text-2xl font-semibold text-[#0F0F0F] mb-6">ĐĂNG KÝ</h1>
+          <h1 className="text-center text-2xl font-semibold text-[#0F0F0F] mb-6">
+            ĐĂNG KÝ
+          </h1>
 
           <input
             type="email"
@@ -74,10 +80,20 @@ function RegisterPage() {
         <div className="flex flex-col justify-center items-center w-[40%] bg-[#0582CA]">
           <div className="bg-[#EEE] w-[8rem] h-[8rem] rounded-full flex items-center justify-center">
             <div className="text-center font-semibold text-sm">
-              <img src="../../public/demo_avatar.jpg" alt="Logo" className="w-10 h-10 mx-auto mb-1" />
+              <img
+                src="../../public/demo_avatar.jpg"
+                alt="Logo"
+                className="w-10 h-10 mx-auto mb-1"
+              />
               CHÉMNET
             </div>
           </div>
+          <p className="text-[#FFFFFF]">
+            Đã có tài khoản?{' '}
+            <Link className="text-[#FFFFFF] underline" to="/login">
+              Đăng nhập
+            </Link>
+          </p>
         </div>
       </div>
     </div>

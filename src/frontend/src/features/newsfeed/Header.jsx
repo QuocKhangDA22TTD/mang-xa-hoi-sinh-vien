@@ -2,6 +2,7 @@ import Input from '../../components/Input';
 import Navigation from './Navigation';
 import CustomLink from '../../components/CustomLink';
 import useUserProfile from '../../hooks/useUserProfile';
+import Button from '../../components/Button';
 
 function Header({ setCurrentView }) {
   const { profile, loading } = useUserProfile();
@@ -27,13 +28,13 @@ function Header({ setCurrentView }) {
         <Navigation setCurrentView={setCurrentView} />
       </div>
       <div className="flex justify-center items-center w-[10%] h-[100%]">
-        <CustomLink>
+        <Button>
           <img
             className="w-[3rem] h-[3rem] rounded-[100%] border border-[#000000] border-opacity-25 shadow-[0_4px_4px_0_rgba(0,0,0,0.25)]"
             src={profile.avatar_url}
             alt="avatar"
           />
-        </CustomLink>
+        </Button>
       </div>
     </div>
   );

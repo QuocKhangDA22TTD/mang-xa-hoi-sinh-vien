@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { 
-  FaUserPlus, 
-  FaUserFriends, 
-  FaInbox, 
-  FaPaperPlane, 
+import {
+  FaUserPlus,
+  FaUserFriends,
+  FaInbox,
+  FaPaperPlane,
   FaSearch,
   FaCheck,
   FaTimes,
   FaUserMinus,
-  FaSpinner
+  FaSpinner,
 } from 'react-icons/fa';
 import {
   getAllUsers,
@@ -19,7 +19,7 @@ import {
   getFriends,
   acceptFriendRequest,
   declineFriendRequest,
-  unfriend
+  unfriend,
 } from '../api/friends';
 
 function FriendsPage() {
@@ -109,52 +109,58 @@ function FriendsPage() {
   };
 
   const handleSendRequest = async (userId) => {
-    setActionLoading(prev => ({ ...prev, [`send_${userId}`]: true }));
+    setActionLoading((prev) => ({ ...prev, [`send_${userId}`]: true }));
     try {
       await sendFriendRequest(userId);
       await loadUsers(); // Refresh list
     } catch (error) {
       alert(error.message);
     } finally {
-      setActionLoading(prev => ({ ...prev, [`send_${userId}`]: false }));
+      setActionLoading((prev) => ({ ...prev, [`send_${userId}`]: false }));
     }
   };
 
   const handleAcceptRequest = async (requestId) => {
-    setActionLoading(prev => ({ ...prev, [`accept_${requestId}`]: true }));
+    setActionLoading((prev) => ({ ...prev, [`accept_${requestId}`]: true }));
     try {
       await acceptFriendRequest(requestId);
       await loadReceivedRequests(); // Refresh list
     } catch (error) {
       alert(error.message);
     } finally {
-      setActionLoading(prev => ({ ...prev, [`accept_${requestId}`]: false }));
+      setActionLoading((prev) => ({ ...prev, [`accept_${requestId}`]: false }));
     }
   };
 
   const handleDeclineRequest = async (requestId) => {
-    setActionLoading(prev => ({ ...prev, [`decline_${requestId}`]: true }));
+    setActionLoading((prev) => ({ ...prev, [`decline_${requestId}`]: true }));
     try {
       await declineFriendRequest(requestId);
       await loadReceivedRequests(); // Refresh list
     } catch (error) {
       alert(error.message);
     } finally {
-      setActionLoading(prev => ({ ...prev, [`decline_${requestId}`]: false }));
+      setActionLoading((prev) => ({
+        ...prev,
+        [`decline_${requestId}`]: false,
+      }));
     }
   };
 
   const handleUnfriend = async (friendId) => {
     if (!confirm('Bạn có chắc muốn hủy kết bạn?')) return;
-    
-    setActionLoading(prev => ({ ...prev, [`unfriend_${friendId}`]: true }));
+
+    setActionLoading((prev) => ({ ...prev, [`unfriend_${friendId}`]: true }));
     try {
       await unfriend(friendId);
       await loadFriends(); // Refresh list
     } catch (error) {
       alert(error.message);
     } finally {
-      setActionLoading(prev => ({ ...prev, [`unfriend_${friendId}`]: false }));
+      setActionLoading((prev) => ({
+        ...prev,
+        [`unfriend_${friendId}`]: false,
+      }));
     }
   };
 
@@ -169,16 +175,38 @@ function FriendsPage() {
     <div key={user.id} className="bg-white rounded-lg p-4 shadow-sm border">
       <div className="flex items-center space-x-3">
         <img
-          src={user.friend_avatar || user.receiver_avatar || user.sender_avatar || user.avatar_url || 'demo_avatar.jpg'}
-          alt={user.friend_name || user.receiver_name || user.sender_name || user.full_name || 'User'}
+          src={
+            user.friend_avatar ||
+            user.receiver_avatar ||
+            user.sender_avatar ||
+            user.avatar_url ||
+            'demo_avatar.jpg'
+          }
+          alt={
+            user.friend_name ||
+            user.receiver_name ||
+            user.sender_name ||
+            user.full_name ||
+            'User'
+          }
           className="w-12 h-12 rounded-full object-cover"
         />
         <div className="flex-1">
           <h3 className="font-semibold text-gray-800">
-            {user.friend_name || user.receiver_name || user.sender_name || user.full_name || user.friend_email || user.receiver_email || user.sender_email || user.email}
+            {user.friend_name ||
+              user.receiver_name ||
+              user.sender_name ||
+              user.full_name ||
+              user.friend_email ||
+              user.receiver_email ||
+              user.sender_email ||
+              user.email}
           </h3>
           <p className="text-sm text-gray-600">
-            {user.friend_email || user.receiver_email || user.sender_email || user.email}
+            {user.friend_email ||
+              user.receiver_email ||
+              user.sender_email ||
+              user.email}
           </p>
         </div>
         {showActions && renderActions(user)}
@@ -187,8 +215,9 @@ function FriendsPage() {
   );
 
   const renderActions = (user) => {
-    const userId = user.id || user.friend_id || user.receiver_id || user.sender_id;
-    
+    const userId =
+      user.id || user.friend_id || user.receiver_id || user.sender_id;
+
     if (activeTab === 'find') {
       if (user.friendship_status === 'friend') {
         return <span className="text-green-600 text-sm">Đã là bạn</span>;
@@ -220,14 +249,22 @@ function FriendsPage() {
             disabled={actionLoading[`accept_${user.id}`]}
             className="bg-green-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-700 disabled:opacity-50"
           >
-            {actionLoading[`accept_${user.id}`] ? <FaSpinner className="animate-spin" /> : <FaCheck />}
+            {actionLoading[`accept_${user.id}`] ? (
+              <FaSpinner className="animate-spin" />
+            ) : (
+              <FaCheck />
+            )}
           </button>
           <button
             onClick={() => handleDeclineRequest(user.id)}
             disabled={actionLoading[`decline_${user.id}`]}
             className="bg-red-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-700 disabled:opacity-50"
           >
-            {actionLoading[`decline_${user.id}`] ? <FaSpinner className="animate-spin" /> : <FaTimes />}
+            {actionLoading[`decline_${user.id}`] ? (
+              <FaSpinner className="animate-spin" />
+            ) : (
+              <FaTimes />
+            )}
           </button>
         </div>
       );
@@ -257,11 +294,16 @@ function FriendsPage() {
 
   const getCurrentData = () => {
     switch (activeTab) {
-      case 'find': return users;
-      case 'friends': return friends;
-      case 'received': return receivedRequests;
-      case 'sent': return sentRequests;
-      default: return [];
+      case 'find':
+        return users;
+      case 'friends':
+        return friends;
+      case 'received':
+        return receivedRequests;
+      case 'sent':
+        return sentRequests;
+      default:
+        return [];
     }
   };
 
@@ -270,8 +312,10 @@ function FriendsPage() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">Quản lý bạn bè</h1>
-          
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">
+            Quản lý bạn bè
+          </h1>
+
           {/* Tabs */}
           <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
             {tabs.map((tab) => {
