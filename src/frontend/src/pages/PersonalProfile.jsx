@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Article from '../features/newsfeed/Article';
 import { getMe } from '../api/auth';
+import { useParams } from 'react-router-dom';
 
 const Button = ({ children, onClick, className }) => (
   <button onClick={onClick} className={className}>
@@ -21,15 +22,26 @@ const Avatar = ({ className, src }) => (
 function PersonalProfile() {
   const [activeTab, setActiveTab] = useState('posts');
   const [profile, setProfile] = useState(null);
+  const [posts, setPosts] = useState([]);
   const [error, setError] = useState(null);
+  const { userId } = useParams();
 
   useEffect(() => {
     async function fetchProfile() {
       try {
-        const user = await getMe();
+        let finalUserId = userId;
+        if (!finalUserId) {
+          const me = await getMe();
+          finalUserId = me.id;
+        }
+
         const res = await fetch(
-          `http://localhost:5000/api/profile/${user.id}`,
+          `http://localhost:5000/api/profile/${finalUserId}`,
           {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
             credentials: 'include',
           }
         );
@@ -46,6 +58,39 @@ function PersonalProfile() {
     fetchProfile();
   }, []);
 
+  useEffect(() => {
+    async function fetchPost() {
+      try {
+        let finalUserId = userId;
+        if (!finalUserId) {
+          const me = await getMe();
+          finalUserId = me.id;
+        }
+
+        const res = await fetch(
+          `http://localhost:5000/api/posts/${finalUserId}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+          }
+        );
+
+        if (!res.ok) throw new Error('Không lấy được thông tin posts');
+
+        const data = await res.json();
+        setPosts(Array.isArray(data) ? data : []);
+        setPosts(data);
+      } catch (err) {
+        setError(err.message);
+      }
+    }
+
+    fetchPost();
+  }, []);
+
   if (error) return <p>{error}</p>;
   if (!profile) return <p>Đang tải...</p>;
 
@@ -60,24 +105,6 @@ function PersonalProfile() {
     avatarUrl: profile.avatar_url,
     coverUrl: '/demo_AnhBia.jpg',
   };
-
-  const posts = [
-    {
-      id: 1,
-      date: '12/3/2025',
-      content: 'Hôm nay tôi đã hoàn thành đồ án!',
-      timeAgo: '2 giờ trước',
-      likes: 0,
-    },
-    {
-      id: 2,
-      date: '12/3/2025',
-      content:
-        'Hôm nay trời mưa nhẹ, mình ngồi quán cà phê quen, gọi ly đen đá, bật một playlist cũ mà mình hay nghe hồi đại học. Chợt thấy một tru cần lại. Dạo này xưởng quay xong xếp, học bận nên không mình đi, ngày nào cũng như chạy đua với thời gian, nhiều lúc cảm thấy mệt mỏi. Có những ngày mình cũng nhân viên đáng cảm hỏa, vài người cẩm cụ laptop, ngoài đường xe cộ vân vội vã, má tử dung mình thấy bình yên hẳn lạ.',
-      timeAgo: '2 giờ trước',
-      likes: 27,
-    },
-  ];
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-100 p-6">
@@ -174,48 +201,21 @@ function PersonalProfile() {
           {/* Posts Content */}
           {activeTab === 'posts' && (
             <div className="space-y-4">
-              {posts.map((post) => (
-                <div
-                  key={post.id}
-                  className="bg-yellow-50 rounded-lg p-4 border border-yellow-200"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="text-xs text-gray-500">{post.date}</span>
-                    <span className="text-xs text-gray-500">
-                      {post.timeAgo}
-                    </span>
-                  </div>
-                  <p className="text-sm text-[#262626] leading-relaxed mb-3">
-                    {post.content}
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <button className="text-xs text-[#0095F6] hover:underline">
-                      Bình luận
-                    </button>
-                    <div className="flex items-center space-x-1">
-                      <span className="text-xs text-gray-500">
-                        {post.likes}
-                      </span>
-                      <button className="flex items-center space-x-1 text-blue-500 hover:text-blue-600 text-xs">
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V8a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5"
-                          />
-                        </svg>
-                        <span>Like</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
+              {Array.isArray(posts) && posts.length > 0 ? (
+                posts.map((post) => (
+                  <Article
+                    key={post.id}
+                    userName={post.full_name}
+                    userId={post.user_id}
+                    title={post.title}
+                    avatarUrl={post.avatar_url}
+                    createdAt={post.created_at}
+                    content={post.content}
+                  />
+                ))
+              ) : (
+                <p>Người dùng chưa có bài viết nào.</p>
+              )}
             </div>
           )}
 

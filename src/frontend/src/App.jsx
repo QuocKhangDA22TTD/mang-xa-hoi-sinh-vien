@@ -1,7 +1,6 @@
 import './App.css';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 
-import CreatePostPage from './pages/CreatePostPage';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -21,18 +20,25 @@ function App() {
       <SocketProvider>
         <Router>
           <Routes>
-            <Route path="/" element={<RegisterPage />} />
+            <Route path="/register" element={<RegisterPage />} />
             <Route path="/login" element={<LoginPage />} />
-            <Route path="/newsfeed" element={<HomePage />} />
-            <Route path="/create-profile" element={<CreateAPersonalProfile />} />
-            <Route path="/update-profile" element={<EditUserProfile />} />          
-            <Route path="/persona-profile" element={<PersonalProfile />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <HomePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/update-profile" element={<EditUserProfile />} />
             <Route
               path="/create-profile"
               element={<CreateAPersonalProfile />}
             />
-            <Route path="/update-profile" element={<EditUserProfile />} />
-            <Route path="/persona-profile" element={<PersonalProfile />} />
+            <Route
+              path="/persona-profile/:userId?"
+              element={<PersonalProfile />}
+            />
             <Route
               path="/chat"
               element={
@@ -46,14 +52,6 @@ function App() {
               element={
                 <ProtectedRoute>
                   <FriendsPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/create-post"
-              element={
-                <ProtectedRoute>
-                  <CreatePostPage />
                 </ProtectedRoute>
               }
             />
