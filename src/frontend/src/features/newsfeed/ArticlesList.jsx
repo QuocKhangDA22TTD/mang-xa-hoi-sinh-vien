@@ -18,6 +18,7 @@ function ArticlesList() {
           key={post.id}
           title={post.title}
           userName={post.full_name}
+          userId={post.user_id}
           avatarUrl={post.avatar_url}
           createdAt={post.created_at}
           content={post.content}

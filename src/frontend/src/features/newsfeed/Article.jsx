@@ -1,19 +1,25 @@
 import DOMPurify from 'dompurify';
 import CustomLink from '../../components/CustomLink';
+import { useNavigate } from 'react-router-dom';
 
-function Article({ userName, title, avatarUrl, createdAt, content }) {
+function Article({ userName, userId, title, avatarUrl, createdAt, content }) {
   const safeContent = DOMPurify.sanitize(content);
+  const navigate = useNavigate();
 
   return (
     <div className="w-[100%] h-auto bg-[#EEEBD3] mb-4 rounded-[10px] border border-[#726A6A] border-opacity-25 shadow-[0_0_8px_4px_rgba(0,0,0,0.25)]">
       <div className="flex w-[100%] h-[100%] p-4 w-[100%] h-[15%]">
         <div className="flex w-[70%] h-[100%] flex items-center font-bold">
-          <img
-            className="w-[3rem] h-[3rem] mr-2 rounded-[100%] border-4 border-[#EEEBD3] border-opacity-100 shadow-[0_0_4px_0_rgba(0,0,0,0.25)]"
-            src={avatarUrl || 'demo_avatar.jpg'}
-            alt="avatar"
-          />
-          {userName}
+          <CustomLink to={`/persona-profile/${userId}`}>
+            <div className="flex flex-row items-center">
+              <img
+                className="w-[3rem] h-[3rem] mr-2 rounded-[100%] border-4 border-[#EEEBD3] border-opacity-100 shadow-[0_0_4px_0_rgba(0,0,0,0.25)]"
+                src={avatarUrl || 'demo_avatar.jpg'}
+                alt="avatar"
+              />
+              {userName}
+            </div>
+          </CustomLink>
         </div>
         <div className="flex justify-end items-center w-[30%] h-[100%]">
           {new Date(createdAt).toLocaleDateString('vi-VN')}

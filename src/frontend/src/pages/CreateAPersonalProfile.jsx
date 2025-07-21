@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { getMe } from '../api/auth';
+import { useNavigate } from 'react-router-dom';
 
 // Nút bấm cơ bản
 const Button = ({ children, onClick, className }) => (
@@ -79,8 +81,10 @@ function CreateAPersonalProfile() {
   const [message, setMessage] = useState('');
   const [avatarUrl, setAvatarUrl] = useState('/demo_avatar.jpg');
   const [coverUrl, setCoverUrl] = useState('/demo_AnhBia.jpg');
+  const [isCheckingProfile, setIsCheckingProfile] = useState(true);
 
   const token = localStorage.getItem('token');
+  const navigate = useNavigate();
 
   const getUserIdFromToken = () => {
     try {
@@ -91,29 +95,36 @@ function CreateAPersonalProfile() {
     }
   };
 
-  // Lấy dữ liệu profile nếu có
   useEffect(() => {
-    const fetchProfile = async () => {
+    const checkProfile = async () => {
       try {
-        const res = await axios.get(`/api/profile/${getUserIdFromToken()}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const { full_name, bio, avatar_url, nickname, birthday, address } =
-          res.data;
+        const user = await getMe();
+        const res = await fetch(
+          `http://localhost:5000/api/profile/${user.id}`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+          }
+        );
 
-        setName(full_name || '');
-        setBio(bio || '');
-        setAvatarUrl(avatar_url || '/demo_avatar.jpg');
-        setNickname(nickname || '');
-        setBirthday(birthday || '');
-        setAddress(address || '');
+        if (res.ok) {
+          navigate('/');
+          return; // dừng ở đây, không render nữa
+        }
       } catch (err) {
-        console.warn('Chưa có profile hoặc lỗi khi tải', err);
+        console.warn('Lỗi kiểm tra profile:', err);
+      } finally {
+        setIsCheckingProfile(false); // cho phép render
       }
     };
 
-    fetchProfile();
+    checkProfile();
   }, []);
+
+  if (isCheckingProfile) return null;
 
   // Xử lý upload avatar
   const handleAvatarChange = async (event) => {
@@ -145,6 +156,7 @@ function CreateAPersonalProfile() {
 
   // Gửi API tạo/cập nhật hồ sơ
   const handleCreateProfile = async () => {
+    const user = getMe();
     if (!name.trim()) {
       setMessage('Vui lòng nhập tên của bạn');
       return;
@@ -152,7 +164,7 @@ function CreateAPersonalProfile() {
 
     try {
       // Kiểm tra hồ sơ đã tồn tại chưa
-      const res = await fetch(`/api/profile/${getUserIdFromToken()}`, {
+      const res = await fetch(`http://localhost:5000/api/profile/${user.id}`, {
         method: 'GET',
         credentials: 'include', // gửi cookie xác thực
       });
@@ -196,6 +208,7 @@ function CreateAPersonalProfile() {
           }),
         });
         setMessage('Tạo hồ sơ thành công');
+        navigate('/');
       } catch (err) {
         setMessage('Tạo hồ sơ thất bại');
       }

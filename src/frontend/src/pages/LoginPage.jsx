@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
+import { Link } from 'react-router-dom';
 
 function LoginPage() {
   const [email, setEmail] = useState('');
@@ -29,7 +30,7 @@ function LoginPage() {
 
       // ✅ Chuyển hướng sau khi đăng nhập
       setTimeout(() => {
-        navigate('/create-post');
+        navigate('/create-profile');
       }, 1000);
     } catch (err) {
       console.error(err);
@@ -52,6 +53,9 @@ function LoginPage() {
               CHÉMNET
             </div>
           </div>
+          <Link className="text-[#FFFFFF] underline" to="/register">
+            Đăng ký
+          </Link>
         </div>
 
         {/* Phần form */}
