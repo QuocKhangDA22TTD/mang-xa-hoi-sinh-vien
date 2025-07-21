@@ -15,11 +15,8 @@ const getPostsByUserId = async (req, res) => {
     const userId = req.params.id;
     const posts = await postModel.getPostsByUserId(userId);
 
-    if (!posts || posts.length === 0) {
-      return res.status(404).json({ message: 'No posts found for this user' });
-    }
-
-    res.status(200).json(posts);
+    // Trả mảng rỗng nếu không có bài viết
+    res.status(200).json(posts || []);
   } catch (err) {
     console.error('Error getting posts by user id:', err);
     res.status(500).json({ message: 'Server error' });

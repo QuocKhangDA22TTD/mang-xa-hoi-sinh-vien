@@ -19,7 +19,8 @@ export const Toast = ({
     };
   }, [onClose, duration]);
 
-  const baseClasses = 'fixed bottom-5 right-5 p-4 rounded-lg shadow-lg flex items-center justify-between max-w-sm text-white';
+  const baseClasses =
+    'fixed bottom-5 right-5 p-4 rounded-lg shadow-lg flex items-center justify-between max-w-sm text-white';
 
   const typeClasses = {
     success: 'bg-green-600',

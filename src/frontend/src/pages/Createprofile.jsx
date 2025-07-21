@@ -65,8 +65,17 @@ function CreateProfile() {
         {/* Avatar Area */}
         <div className="relative flex justify-center -mt-16">
           <div className="relative w-[120px] h-[120px]">
-            <Avatar src={avatarUrl} onImageChange={handleAvatarChange} className="avatar-image w-full h-full border-4 border-white" />
-            <label htmlFor="avatar-upload" className="avatar-upload-button absolute bottom-0 right-0 w-[28px] h-[28px] bg-[#1877f2] text-white flex items-center justify-center rounded-full cursor-pointer">+</label>
+            <Avatar
+              src={avatarUrl}
+              onImageChange={handleAvatarChange}
+              className="avatar-image w-full h-full border-4 border-white"
+            />
+            <label
+              htmlFor="avatar-upload"
+              className="avatar-upload-button absolute bottom-0 right-0 w-[28px] h-[28px] bg-[#1877f2] text-white flex items-center justify-center rounded-full cursor-pointer"
+            >
+              +
+            </label>
           </div>
         </div>
 
@@ -114,7 +123,9 @@ function CreateProfile() {
 
         {/* Bio Box */}
         <div className="bio-box bg-[#e0d8d7] rounded-[8px] px-6 py-4 mx-8 mt-6 relative">
-          <label className="bio-label block text-sm font-medium text-gray-700 mb-1">Tiểu sử</label>
+          <label className="bio-label block text-sm font-medium text-gray-700 mb-1">
+            Tiểu sử
+          </label>
           <textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}

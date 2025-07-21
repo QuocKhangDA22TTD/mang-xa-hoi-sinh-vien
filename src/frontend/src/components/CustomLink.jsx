@@ -10,6 +10,7 @@ function CustomLink({
   iconPosition = 'left',
   className = '',
   style = {},
+  onClick = {},
   ...rest
 }) {
   const Icon = iconName ? getIcon(iconLib, iconName) : null;
@@ -19,6 +20,7 @@ function CustomLink({
       to={to}
       className={`inline-flex justify-center items-center hover:underline ${className}`}
       style={style}
+      onClick={onClick}
       {...rest}
     >
       {Icon && iconPosition === 'left' && <Icon />}
