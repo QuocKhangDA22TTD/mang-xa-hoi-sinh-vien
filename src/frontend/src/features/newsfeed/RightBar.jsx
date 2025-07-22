@@ -1,6 +1,18 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getFriends } from '../../api/friends';
+import {
+  getMyConversations,
+  getMessages,
+  sendMessage,
+  sendFileMessage,
+  createConversation,
+  getUnreadCounts,
+  markMessagesAsRead,
+} from '../../api/chat';
+import { getMe } from '../../api/auth';
+import { useSocket } from '../../context/SocketContext';
+import EmojiPicker from 'emoji-picker-react';
 import {
   FaUserFriends,
   FaCalendarAlt,
@@ -17,23 +29,57 @@ import {
   FaTimes,
   FaSmile,
   FaPaperclip,
+  FaImage,
+  FaFile,
 } from 'react-icons/fa';
 
 function RightBar() {
   const navigate = useNavigate();
+  const { socket, isConnected } = useSocket();
   const [friends, setFriends] = useState([]);
   const [friendsLoading, setFriendsLoading] = useState(true);
 
+  // Debug socket connection
+  useEffect(() => {
+    console.log('🔍 RightBar socket state:', { socket: !!socket, isConnected });
+  }, [socket, isConnected]);
+
   // Chat states
   const [activeChatUser, setActiveChatUser] = useState(null);
+  const [activeConversation, setActiveConversation] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [unreadCounts, setUnreadCounts] = useState({}); // {conversationId: count}
+  const [friendConversations, setFriendConversations] = useState({}); // {friendId: conversationId}
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const loadingConversationRef = useRef(false); // Prevent multiple calls
+  const lastClickTimeRef = useRef(0); // Debounce clicks
 
   // Auto scroll to bottom when new messages arrive
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages]);
+    if (chatMessages.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatMessages.length]); // Only depend on length, not the array itself
+
+  // Get current user on mount
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      try {
+        const user = await getMe();
+        setCurrentUser(user);
+      } catch (error) {
+        console.error('Lỗi khi lấy thông tin user:', error);
+      }
+    };
+
+    loadCurrentUser();
+  }, []);
 
   // Fetch friends list on component mount
   useEffect(() => {
@@ -63,58 +109,294 @@ function RightBar() {
     loadFriends();
   }, []);
 
-  // Sample chat messages
-  const sampleMessages = {
-    1: [
-      { id: 1, text: 'Chào bạn!', sender: 'friend', time: '10:30' },
-      {
-        id: 2,
-        text: 'Hôm nay bạn có khỏe không?',
-        sender: 'friend',
-        time: '10:31',
-      },
-      {
-        id: 3,
-        text: 'Chào! Mình khỏe, cảm ơn bạn',
-        sender: 'me',
-        time: '10:35',
-      },
-    ],
-    2: [
-      {
-        id: 1,
-        text: 'Bài tập hôm nay khó quá!',
-        sender: 'friend',
-        time: '14:20',
-      },
-      { id: 2, text: 'Mình cũng thấy vậy', sender: 'me', time: '14:22' },
-    ],
+  // Load current user and unread counts
+  useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        const user = await getMe();
+        setCurrentUser(user);
+
+        // Load unread counts
+        const counts = await getUnreadCounts();
+        console.log('🔍 Loaded unread counts:', counts);
+        setUnreadCounts(counts);
+      } catch (error) {
+        console.error('Lỗi khi tải dữ liệu user:', error);
+      }
+    };
+
+    loadUserData();
+  }, []);
+
+  // Socket listeners for real-time messages
+  useEffect(() => {
+    if (!socket || !currentUser) {
+      console.log('🔍 Socket or currentUser not ready:', {
+        socket: !!socket,
+        currentUser: !!currentUser,
+      });
+      return;
+    }
+
+    console.log('🔍 Setting up socket listeners for user:', currentUser.id);
+
+    const handleNewMessage = (messageData) => {
+      console.log('🔍 Received new message:', messageData);
+
+      // If chat window is open for this conversation, add message immediately
+      if (
+        activeConversation &&
+        activeConversation.id === messageData.conversation_id
+      ) {
+        console.log('🔍 Adding message to active chat');
+        const newMsg = {
+          id: messageData.id,
+          text: messageData.text,
+          sender: messageData.sender_id === currentUser.id ? 'me' : 'friend',
+          time: new Date(messageData.sent_at).toLocaleTimeString('vi-VN', {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          sender_id: messageData.sender_id,
+          message_type: messageData.message_type || 'text',
+          attachment_url: messageData.attachment_url,
+        };
+        setChatMessages((prev) => [...prev, newMsg]);
+
+        // Mark as read since user is viewing the conversation
+        markMessagesAsRead(messageData.conversation_id);
+      } else {
+        console.log(
+          '🔍 Updating unread count for conversation:',
+          messageData.conversation_id
+        );
+        // Update unread count
+        setUnreadCounts((prev) => ({
+          ...prev,
+          [messageData.conversation_id]: Math.min(
+            (prev[messageData.conversation_id] || 0) + 1,
+            5
+          ),
+        }));
+      }
+    };
+
+    socket.on('new_message', handleNewMessage);
+    console.log('🔍 Socket listener registered for new_message');
+
+    return () => {
+      console.log('🔍 Cleaning up socket listeners');
+      socket.off('new_message', handleNewMessage);
+    };
+  }, [socket, currentUser?.id, activeConversation?.id]); // Use specific IDs to avoid unnecessary re-renders
+
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showEmojiPicker && !event.target.closest('.emoji-picker-container')) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+
+  // Find or create conversation with friend
+  const findOrCreateConversation = async (friendId) => {
+    try {
+      setChatLoading(true);
+
+      console.log('🔍 Finding conversation for friend:', friendId);
+
+      // First, get all conversations to see if one exists with this friend
+      const conversations = await getMyConversations();
+      console.log('🔍 All conversations:', conversations);
+
+      // Find existing conversation with this friend (1-on-1 chat)
+      const existingConversation = conversations.find((conv) => {
+        console.log('🔍 Checking conversation:', conv);
+        console.log('🔍 Members:', conv.members);
+        console.log('🔍 Is group:', conv.is_group);
+        console.log('🔍 Looking for friend ID:', friendId);
+
+        if (!conv.members || !Array.isArray(conv.members)) {
+          console.log('❌ No members array found');
+          return false;
+        }
+
+        const memberIds = conv.members.map((m) => m.user_id);
+        console.log('🔍 Member IDs:', memberIds);
+        console.log('🔍 Friend ID type:', typeof friendId);
+        console.log('🔍 Contains friend?', memberIds.includes(friendId));
+
+        const isMatch =
+          !conv.is_group &&
+          conv.members.some(
+            (member) =>
+              member.user_id === friendId ||
+              member.user_id === parseInt(friendId) ||
+              parseInt(member.user_id) === parseInt(friendId)
+          );
+
+        console.log('🔍 Conversation match result:', isMatch);
+        return isMatch;
+      });
+
+      if (existingConversation) {
+        console.log('🔍 Found existing conversation:', existingConversation);
+        // Update friend-conversation mapping
+        setFriendConversations((prev) => ({
+          ...prev,
+          [friendId]: existingConversation.id,
+        }));
+        return existingConversation;
+      }
+
+      console.log('🔍 Creating new conversation with friend:', friendId);
+      // Create new conversation if none exists
+      const newConversation = await createConversation([friendId], false);
+      console.log('🔍 Created new conversation:', newConversation);
+
+      // Update friend-conversation mapping
+      setFriendConversations((prev) => ({
+        ...prev,
+        [friendId]: newConversation.id,
+      }));
+
+      return newConversation;
+    } catch (error) {
+      console.error('Lỗi khi tìm/tạo conversation:', error);
+      throw error;
+    } finally {
+      setChatLoading(false);
+    }
   };
 
-  const handleOpenChat = (friend) => {
-    setActiveChatUser(friend);
-    setChatMessages(sampleMessages[friend.id] || []);
-  };
+  const handleOpenChat = useCallback(
+    async (friend) => {
+      // Debounce rapid clicks
+      const now = Date.now();
+      if (now - lastClickTimeRef.current < 1000) {
+        console.log('🔍 Click too soon, debouncing...');
+        return;
+      }
+      lastClickTimeRef.current = now;
+
+      // Prevent multiple simultaneous calls
+      if (loadingConversationRef.current) {
+        console.log('🔍 Already loading conversation, skipping...');
+        return;
+      }
+
+      try {
+        loadingConversationRef.current = true;
+        setActiveChatUser(friend);
+        setChatMessages([]);
+        setChatLoading(true);
+
+        console.log('🔍 Opening chat for friend:', friend.id);
+
+        // Find or create conversation
+        const conversation = await findOrCreateConversation(friend.id);
+        setActiveConversation(conversation);
+
+        console.log('🔍 Loading messages for conversation:', conversation.id);
+        // Load chat history
+        const messages = await getMessages(conversation.id);
+
+        // Transform messages to match our component format
+        const transformedMessages = messages.map((msg) => ({
+          id: msg.id,
+          text: msg.text,
+          sender: msg.sender_id === currentUser?.id ? 'me' : 'friend',
+          time: new Date(msg.sent_at || msg.created_at).toLocaleTimeString(
+            'vi-VN',
+            {
+              hour: '2-digit',
+              minute: '2-digit',
+            }
+          ),
+          sender_id: msg.sender_id,
+          message_type: msg.message_type || 'text',
+          attachment_url: msg.attachment_url,
+        }));
+
+        setChatMessages(transformedMessages);
+
+        // Mark messages as read and clear unread count
+        await markMessagesAsRead(conversation.id);
+        setUnreadCounts((prev) => ({
+          ...prev,
+          [conversation.id]: 0,
+        }));
+      } catch (error) {
+        console.error('Lỗi khi mở chat:', error);
+        // Fallback to empty chat if error
+        setChatMessages([]);
+      } finally {
+        setChatLoading(false);
+        loadingConversationRef.current = false;
+      }
+    },
+    [currentUser]
+  ); // Only depend on currentUser
 
   const handleCloseChat = () => {
     setActiveChatUser(null);
+    setActiveConversation(null);
     setChatMessages([]);
     setNewMessage('');
+    loadingConversationRef.current = false; // Reset loading flag
   };
 
-  const handleSendMessage = () => {
-    if (newMessage.trim() && activeChatUser) {
-      const newMsg = {
-        id: Date.now(),
-        text: newMessage,
-        sender: 'me',
-        time: new Date().toLocaleTimeString('vi-VN', {
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-      };
-      setChatMessages((prev) => [...prev, newMsg]);
-      setNewMessage('');
+  const handleSendMessage = async () => {
+    console.log('🔍 handleSendMessage called');
+    console.log('🔍 newMessage:', newMessage);
+    console.log('🔍 activeConversation:', activeConversation);
+    console.log('🔍 currentUser:', currentUser);
+    console.log('🔍 chatLoading:', chatLoading);
+
+    if (newMessage.trim() && activeConversation && currentUser) {
+      try {
+        console.log(
+          '🔍 Sending message to conversation:',
+          activeConversation.id
+        );
+
+        // Send message via API
+        const sentMessage = await sendMessage(
+          activeConversation.id,
+          newMessage
+        );
+
+        console.log('🔍 Message sent successfully:', sentMessage);
+
+        // Add message to local state immediately for better UX
+        const newMsg = {
+          id: sentMessage.id,
+          text: newMessage,
+          sender: 'me',
+          time: new Date().toLocaleTimeString('vi-VN', {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+          sender_id: currentUser.id,
+        };
+
+        setChatMessages((prev) => [...prev, newMsg]);
+        setNewMessage('');
+      } catch (error) {
+        console.error('❌ Lỗi khi gửi tin nhắn:', error);
+        // Could show error toast here
+      }
+    } else {
+      console.log('❌ Cannot send message - missing requirements:');
+      console.log('  - newMessage.trim():', !!newMessage.trim());
+      console.log('  - activeConversation:', !!activeConversation);
+      console.log('  - currentUser:', !!currentUser);
     }
   };
 
@@ -123,6 +405,53 @@ function RightBar() {
       e.preventDefault();
       handleSendMessage();
     }
+  };
+
+  const handleEmojiClick = (emojiData) => {
+    setNewMessage((prev) => prev + emojiData.emoji);
+    setShowEmojiPicker(false);
+  };
+
+  const handleFileSelect = async (event) => {
+    const file = event.target.files[0];
+    if (!file || !activeConversation) return;
+
+    try {
+      setIsUploading(true);
+      console.log('🔍 Uploading file:', file.name);
+
+      const result = await sendFileMessage(activeConversation.id, file);
+
+      // Add file message to chat immediately
+      const newMsg = {
+        id: result.id,
+        text: result.text || file.name,
+        sender: 'me',
+        time: new Date().toLocaleTimeString('vi-VN', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        sender_id: currentUser.id,
+        message_type: result.message_type,
+        attachment_url: result.attachment_url,
+      };
+
+      setChatMessages((prev) => [...prev, newMsg]);
+
+      // Clear file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } catch (error) {
+      console.error('❌ Lỗi khi upload file:', error);
+      alert('Không thể upload file. Vui lòng thử lại!');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleFileButtonClick = () => {
+    fileInputRef.current?.click();
   };
 
   const [trendingTopics] = useState([
@@ -203,7 +532,7 @@ function RightBar() {
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-gray-900 dark:text-white flex items-center">
             <FaUserFriends className="w-4 h-4 mr-2 text-green-600 dark:text-green-400" />
-            Bạn bè (Click để chat)
+            Bạn bè
           </h3>
           <button className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
             <FaEllipsisH className="w-4 h-4" />
@@ -256,6 +585,20 @@ function RightBar() {
                     {friend.status === 'online' ? 'Đang hoạt động' : 'Vắng mặt'}
                   </p>
                 </div>
+                {/* Unread message badge */}
+                {(() => {
+                  // Get conversation ID for this friend
+                  const conversationId = friendConversations[friend.id];
+                  const unreadCount = conversationId
+                    ? unreadCounts[conversationId] || 0
+                    : 0;
+
+                  return unreadCount > 0 ? (
+                    <div className="bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5">
+                      {unreadCount > 5 ? '5+' : unreadCount}
+                    </div>
+                  ) : null;
+                })()}
               </button>
             ))
           )}
@@ -394,43 +737,133 @@ function RightBar() {
 
           {/* Chat Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
-            {chatMessages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.sender === 'me' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-xs px-3 py-2 rounded-2xl text-sm ${
-                    message.sender === 'me'
-                      ? 'bg-blue-500 text-white rounded-br-md'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-md'
-                  }`}
-                >
-                  <p>{message.text}</p>
-                  <p
-                    className={`text-xs mt-1 ${
-                      message.sender === 'me'
-                        ? 'text-blue-100'
-                        : 'text-gray-500 dark:text-gray-400'
-                    }`}
-                  >
-                    {message.time}
+            {chatLoading ? (
+              <div className="flex justify-center items-center h-full">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Đang tải tin nhắn...
                   </p>
                 </div>
               </div>
-            ))}
+            ) : chatMessages.length === 0 ? (
+              <div className="flex justify-center items-center h-full">
+                <div className="text-center">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Chưa có tin nhắn nào
+                  </p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                    Hãy bắt đầu cuộc trò chuyện!
+                  </p>
+                </div>
+              </div>
+            ) : (
+              chatMessages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.sender === 'me' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-xs px-3 py-2 rounded-2xl text-sm ${
+                      message.sender === 'me'
+                        ? 'bg-blue-500 text-white rounded-br-md'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-md'
+                    }`}
+                  >
+                    {/* Render different message types */}
+                    {message.message_type === 'image' &&
+                    message.attachment_url ? (
+                      <div>
+                        <img
+                          src={message.attachment_url}
+                          alt="Shared image"
+                          className="max-w-xs max-h-64 rounded-lg cursor-pointer hover:opacity-90"
+                          onClick={() =>
+                            window.open(message.attachment_url, '_blank')
+                          }
+                        />
+                        {message.text && <p className="mt-2">{message.text}</p>}
+                      </div>
+                    ) : message.message_type === 'file' &&
+                      message.attachment_url ? (
+                      <div className="flex items-center space-x-2 p-2 bg-gray-50 dark:bg-gray-600 rounded">
+                        <FaFile className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+                        <a
+                          href={message.attachment_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 dark:text-blue-400 hover:underline text-sm"
+                        >
+                          {message.text || 'File đính kèm'}
+                        </a>
+                      </div>
+                    ) : (
+                      <p>{message.text}</p>
+                    )}
+
+                    <p
+                      className={`text-xs mt-1 ${
+                        message.sender === 'me'
+                          ? 'text-blue-100'
+                          : 'text-gray-500 dark:text-gray-400'
+                      }`}
+                    >
+                      {message.time}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
             <div ref={messagesEndRef} />
           </div>
 
           {/* Chat Input */}
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="p-4 border-t border-gray-200 dark:border-gray-700 relative">
+            {/* Emoji Picker */}
+            {showEmojiPicker && (
+              <div className="absolute bottom-16 left-4 z-50 emoji-picker-container">
+                <EmojiPicker
+                  onEmojiClick={handleEmojiClick}
+                  theme="auto"
+                  width={300}
+                  height={400}
+                />
+              </div>
+            )}
+
             <div className="flex items-center space-x-2">
-              <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
-                <FaPaperclip className="w-4 h-4" />
+              {/* File Upload Button */}
+              <button
+                onClick={handleFileButtonClick}
+                disabled={isUploading || !activeConversation}
+                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 transition-colors"
+                title="Gửi file"
+              >
+                {isUploading ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600"></div>
+                ) : (
+                  <FaPaperclip className="w-4 h-4" />
+                )}
               </button>
-              <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
+
+              {/* Emoji Button */}
+              <button
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                title="Chọn emoji"
+              >
                 <FaSmile className="w-4 h-4" />
               </button>
+
+              {/* Hidden File Input */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                onChange={handleFileSelect}
+                accept="image/*,.pdf,.doc,.docx,.txt"
+                className="hidden"
+              />
+
               <input
                 type="text"
                 value={newMessage}
@@ -441,7 +874,12 @@ function RightBar() {
               />
               <button
                 onClick={handleSendMessage}
-                disabled={!newMessage.trim()}
+                disabled={
+                  !newMessage.trim() ||
+                  chatLoading ||
+                  !activeConversation ||
+                  isUploading
+                }
                 className="p-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 dark:disabled:bg-gray-600 text-white rounded-full transition-colors"
               >
                 <FaPaperPlane className="w-4 h-4" />

@@ -64,6 +64,8 @@ CREATE TABLE messages (
   conversation_id INT,
   sender_id INT,
   text TEXT,
+  message_type ENUM('text', 'image', 'file') DEFAULT 'text',
+  attachment_url TEXT,
   sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (conversation_id) REFERENCES conversations(id) ON DELETE CASCADE,
   FOREIGN KEY (sender_id) REFERENCES users(id) ON DELETE CASCADE
