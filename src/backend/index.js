@@ -42,14 +42,43 @@ app.options('*', (req, res) => {
 
 app.use(express.json());
 
-// Debug middleware
+// Manual CORS headers middleware
 app.use((req, res, next) => {
-  console.log(
-    `📝 ${req.method} ${req.path} from origin: ${req.headers.origin}`
-  );
+  const origin = req.headers.origin;
+  console.log(`📝 ${req.method} ${req.path} from origin: ${origin}`);
+
+  // Set CORS headers manually
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  } else if (!origin) {
+    res.header('Access-Control-Allow-Origin', '*');
+  }
+
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Credentials', 'true');
+
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    console.log('✅ Handling OPTIONS preflight request');
+    return res.sendStatus(200);
+  }
+
   next();
 });
 
+// Temporary: Allow all origins for debugging
+app.use(
+  cors({
+    origin: true, // Allow all origins temporarily
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true,
+  })
+);
+
+// Original CORS config (commented out for debugging)
+/*
 app.use(
   cors({
     origin: function (origin, callback) {
@@ -68,17 +97,25 @@ app.use(
     credentials: true,
   })
 );
+*/
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 const postRoutes = require('./routes/postRoutes');
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
 // Test endpoint
 app.get('/api/test', (req, res) => {
+  console.log('🧪 Test endpoint called from:', req.headers.origin);
   res.json({
     message: 'CORS test successful!',
     origin: req.headers.origin,
     timestamp: new Date().toISOString(),
+    allowedOrigins: allowedOrigins,
   });
 });
 
