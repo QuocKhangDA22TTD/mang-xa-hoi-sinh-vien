@@ -10,6 +10,10 @@ const pool = mysql.createPool({
   connectTimeout: 60000,
   acquireTimeout: 60000,
   timeout: 60000,
+  ssl:
+    process.env.NODE_ENV === 'production'
+      ? { rejectUnauthorized: false }
+      : false,
 });
 
 module.exports = pool;

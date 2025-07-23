@@ -38,7 +38,21 @@ JWT_SECRET=xinchao
 PORT=5000
 ```
 
-**Lưu ý**: Thay `your-actual-password` bằng password thực tế từ connection string của bạn.
+**Lưu ý**:
+
+- Thay `your-actual-password` bằng password thực tế từ connection string của bạn
+- Đảm bảo copy chính xác password (không có khoảng trắng thừa)
+- Nếu vẫn lỗi "Access denied", kiểm tra lại user và password trong Railway dashboard
+
+**Cách lấy thông tin chính xác từ Railway:**
+
+1. Vào Railway dashboard → MySQL service
+2. Tab "Variables" → copy các giá trị:
+   - `MYSQL_HOST`
+   - `MYSQL_PORT`
+   - `MYSQL_USER`
+   - `MYSQL_PASSWORD`
+   - `MYSQL_DATABASE`
 
 ### 4. Cập nhật Frontend URL
 

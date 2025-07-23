@@ -15,7 +15,8 @@ app.use(express.json());
 const allowedOrigins = [
   'http://localhost:5173',
   'https://mang-xa-hoi-sinh-vien-production.up.railway.app',
-];
+  `https://${process.env.FRONTEND_URL}`,
+].filter(Boolean);
 
 app.use(
   cors({
