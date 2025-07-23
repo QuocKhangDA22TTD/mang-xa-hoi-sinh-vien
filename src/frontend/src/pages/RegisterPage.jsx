@@ -1,11 +1,17 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Button from '../components/Button';
 import { API_ENDPOINTS } from '../config/api';
+import { testCorsConnection } from '../utils/testCors';
 
 function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rePassword, setRePassword] = useState('');
+
+  // Test CORS on component mount
+  useEffect(() => {
+    testCorsConnection();
+  }, []);
 
   const handleRegister = async () => {
     if (password !== rePassword) {

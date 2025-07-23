@@ -54,11 +54,22 @@ NODE_ENV=production
 - `PORT=5000`
 - `NODE_ENV=production`
 
-### 3. Deploy lại cả frontend và backend service
+### 3. ✅ Thêm CORS debugging:
 
-### 4. Test đăng ký user
+- Thêm OPTIONS handler riêng
+- Thêm debug logging cho tất cả requests
+- Tạo test endpoint `/api/test`
+- Thêm CORS test utility cho frontend
 
-Sau khi deploy, test API đăng ký để đảm bảo CORS và database hoạt động.
+### 4. Deploy lại backend service NGAY
+
+**Quan trọng**: Backend cần được deploy với cấu hình CORS mới!
+
+### 5. Test CORS và đăng ký
+
+- Kiểm tra console logs trong browser
+- Test endpoint `/api/test` trước
+- Sau đó test đăng ký user
 
 ## 🔧 Troubleshooting:
 
