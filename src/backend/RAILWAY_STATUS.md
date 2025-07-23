@@ -61,9 +61,20 @@ NODE_ENV=production
 - Tạo test endpoint `/api/test`
 - Thêm CORS test utility cho frontend
 
-### 4. Deploy lại backend service NGAY
+### 4. ❌ Phát hiện lỗi path-to-regexp
 
-**Quan trọng**: Backend cần được deploy với cấu hình CORS mới!
+Backend bị crash do Express 5.x có vấn đề với route parsing.
+
+**Giải pháp**:
+
+- Downgrade Express từ 5.1.0 → 4.18.2
+- Downgrade Multer từ 2.0.1 → 1.4.5-lts.1
+- Tạo simple-server.js để test CORS trước
+- Thay đổi start script: `"start": "node simple-server.js"`
+
+### 5. Deploy lại backend service với simple server
+
+**Quan trọng**: Sử dụng simple server để test CORS trước!
 
 ### 5. Test CORS và đăng ký
 
