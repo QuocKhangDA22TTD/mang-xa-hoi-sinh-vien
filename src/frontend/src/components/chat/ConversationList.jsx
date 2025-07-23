@@ -12,7 +12,7 @@ const ConversationList = memo(function ConversationList({
       <div className="p-4">
         {[...Array(5)].map((_, i) => (
           <div
-            key={i}
+            key={`conversation-skeleton-${i}`}
             className="flex items-center space-x-3 p-3 animate-pulse"
           >
             <div className="w-12 h-12 bg-gray-300 dark:bg-gray-600 rounded-full"></div>

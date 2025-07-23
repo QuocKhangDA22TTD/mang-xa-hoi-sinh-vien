@@ -1,148 +1,330 @@
-import { useState } from 'react';
-
-const Button = ({ children, onClick, className }) => (
-  <button onClick={onClick} className={className}>
-    {children}
-  </button>
-);
-
-const Input = ({ value, onChange, className, placeholder }) => (
-  <input
-    value={value}
-    onChange={onChange}
-    className={className}
-    placeholder={placeholder}
-  />
-);
-
-const Avatar = ({ className, src, onImageChange }) => (
-  <div className={className}>
-    <img
-      src={src}
-      alt="avatar"
-      className="w-full h-full object-cover rounded-full"
-    />
-    <input
-      type="file"
-      accept="image/*"
-      onChange={onImageChange}
-      className="hidden"
-      id="avatar-upload"
-    />
-  </div>
-);
+import { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { FaCamera, FaArrowLeft, FaSave, FaTimes } from 'react-icons/fa';
 
 function CreateProfile() {
-  const [name, setName] = useState('');
-  const [nickname, setNickname] = useState('');
-  const [birthday, setBirthday] = useState('');
-  const [address, setAddress] = useState('');
-  const [bio, setBio] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('/demo-avatar.svg');
+  const [profile, setProfile] = useState({
+    full_name: '',
+    nickname: '',
+    birthday: '',
+    address: '',
+    bio: '',
+    avatar_url: '',
+    banner_url: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [bannerPreview, setBannerPreview] = useState(null);
 
-  const handleAvatarChange = (event) => {
-    const file = event.target.files[0];
+  const navigate = useNavigate();
+  const avatarInputRef = useRef(null);
+  const bannerInputRef = useRef(null);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setProfile((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (e) => {
-        setAvatarUrl(e.target.result);
+        setAvatarPreview(e.target.result);
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const handleSubmit = () => {
-    alert('Hồ sơ đã được tạo!');
-    // Gửi dữ liệu tới backend tại đây nếu cần
+  const handleBannerChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setBannerPreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const uploadImage = async (file, type) => {
+    const formData = new FormData();
+    formData.append(type, file);
+
+    const response = await fetch(
+      `http://localhost:5000/api/profile/upload/${type}`,
+      {
+        method: 'POST',
+        body: formData,
+        credentials: 'include',
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Upload thất bại');
+    }
+
+    return await response.json();
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      let profileData = { ...profile };
+
+      // Upload avatar nếu có
+      if (avatarInputRef.current?.files[0]) {
+        const avatarResult = await uploadImage(
+          avatarInputRef.current.files[0],
+          'avatar'
+        );
+        profileData.avatar_url = avatarResult.avatar_url;
+      }
+
+      // Upload banner nếu có
+      if (bannerInputRef.current?.files[0]) {
+        const bannerResult = await uploadImage(
+          bannerInputRef.current.files[0],
+          'banner'
+        );
+        profileData.banner_url = bannerResult.banner_url;
+      }
+
+      // Tạo profile
+      const response = await fetch('http://localhost:5000/api/profile', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(profileData),
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Tạo profile thất bại');
+      }
+
+      setSuccess('Tạo profile thành công!');
+      setTimeout(() => {
+        navigate('/profile');
+      }, 2000);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="profile-card w-[600px] bg-white rounded-[8px] shadow-lg overflow-hidden">
-        {/* Cover Photo */}
-        <div className="cover-photo h-[180px] bg-[#0088cc]"></div>
-
-        {/* Avatar Area */}
-        <div className="relative flex justify-center -mt-16">
-          <div className="relative w-[120px] h-[120px]">
-            <Avatar
-              src={avatarUrl}
-              onImageChange={handleAvatarChange}
-              className="avatar-image w-full h-full border-4 border-white"
-            />
-            <label
-              htmlFor="avatar-upload"
-              className="avatar-upload-button absolute bottom-0 right-0 w-[28px] h-[28px] bg-[#1877f2] text-white flex items-center justify-center rounded-full cursor-pointer"
-            >
-              +
-            </label>
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <div className="bg-white dark:bg-gray-800 shadow-sm">
+          <div className="px-6 py-4 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate(-1)}
+                className="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <FaArrowLeft className="w-5 h-5" />
+              </button>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Tạo profile
+              </h1>
+            </div>
           </div>
         </div>
 
-        {/* Identity Section */}
-        <div className="identity-section text-center pt-[70px]">
-          <div className="flex justify-center items-center gap-2">
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Tên của bạn"
-              className="text-xl font-bold text-center border-none outline-none"
-            />
-            <span className="text-sm">✎</span>
-          </div>
-          <Input
-            value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
-            placeholder="Biệt danh"
-            className="text-sm text-[#0088cc] text-center border-none outline-none"
-          />
-        </div>
+        {/* Form */}
+        <div className="p-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Banner Section */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm">
+              <div className="relative h-48 bg-gradient-to-r from-blue-500 to-purple-600">
+                <img
+                  src={bannerPreview || '/demo_AnhBia.jpg'}
+                  alt="Banner"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-black/20"></div>
+                <button
+                  type="button"
+                  onClick={() => bannerInputRef.current?.click()}
+                  className="absolute bottom-4 right-4 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors"
+                >
+                  <FaCamera className="w-5 h-5" />
+                </button>
+                <input
+                  ref={bannerInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBannerChange}
+                  className="hidden"
+                />
+              </div>
 
-        {/* Details Box */}
-        <div className="details-box px-8 py-6 mt-4 space-y-4">
-          <div className="flex items-center justify-between border-b border-gray-300 pb-2">
-            <label className="detail-label text-base">Sinh nhật:</label>
-            <Input
-              value={birthday}
-              onChange={(e) => setBirthday(e.target.value)}
-              className="detail-value flex-1 text-right border-none outline-none"
-            />
-            <span className="ml-2">✎</span>
-          </div>
+              {/* Avatar Section */}
+              <div className="relative px-6 pb-6">
+                <div className="relative -mt-16 mb-6">
+                  <div className="relative inline-block">
+                    <img
+                      src={avatarPreview || '/demo_avatar.jpg'}
+                      alt="Avatar"
+                      className="w-32 h-32 rounded-full border-4 border-white dark:border-gray-800 shadow-xl object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => avatarInputRef.current?.click()}
+                      className="absolute bottom-2 right-2 p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg transition-colors"
+                    >
+                      <FaCamera className="w-4 h-4" />
+                    </button>
+                    <input
+                      ref={avatarInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                      className="hidden"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
 
-          <div className="flex items-center justify-between border-b border-gray-300 pb-2">
-            <label className="detail-label text-base">Địa chỉ:</label>
-            <Input
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              className="detail-value flex-1 text-right border-none outline-none"
-            />
-            <span className="ml-2">✎</span>
-          </div>
-        </div>
+            {/* Form Fields */}
+            <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-sm">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Họ tên
+                  </label>
+                  <input
+                    type="text"
+                    name="full_name"
+                    value={profile.full_name}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="Nhập họ tên"
+                  />
+                </div>
 
-        {/* Bio Box */}
-        <div className="bio-box bg-[#e0d8d7] rounded-[8px] px-6 py-4 mx-8 mt-6 relative">
-          <label className="bio-label block text-sm font-medium text-gray-700 mb-1">
-            Tiểu sử
-          </label>
-          <textarea
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            className="w-full h-[90px] bg-transparent outline-none resize-none"
-            placeholder="Giới thiệu về bạn..."
-          />
-          <span className="absolute top-2 right-3 text-gray-500">✎</span>
-        </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Tên người dùng
+                  </label>
+                  <input
+                    type="text"
+                    name="nickname"
+                    value={profile.nickname}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="Nhập tên người dùng"
+                  />
+                </div>
 
-        {/* Submit Button */}
-        <div className="flex justify-end mt-6 mr-8 mb-6">
-          <Button
-            onClick={handleSubmit}
-            className="submit-button w-[140px] h-[40px] bg-[#0099ff] text-white font-bold text-sm rounded-[6px] shadow-md hover:bg-blue-600"
-          >
-            TẠO HỒ SƠ
-          </Button>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Sinh nhật
+                  </label>
+                  <input
+                    type="date"
+                    name="birthday"
+                    value={profile.birthday}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Địa chỉ
+                  </label>
+                  <input
+                    type="text"
+                    name="address"
+                    value={profile.address}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="Nhập địa chỉ"
+                  />
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Giới thiệu
+                </label>
+                <textarea
+                  name="bio"
+                  value={profile.bio}
+                  onChange={handleInputChange}
+                  rows={4}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  placeholder="Viết vài dòng giới thiệu về bản thân..."
+                />
+              </div>
+            </div>
+
+            {/* Messages */}
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <div className="flex items-center">
+                  <FaTimes className="w-5 h-5 text-red-600 dark:text-red-400 mr-2" />
+                  <p className="text-red-700 dark:text-red-300">{error}</p>
+                </div>
+              </div>
+            )}
+
+            {success && (
+              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <div className="flex items-center">
+                  <FaSave className="w-5 h-5 text-green-600 dark:text-green-400 mr-2" />
+                  <p className="text-green-700 dark:text-green-300">
+                    {success}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <div className="flex justify-end space-x-4">
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex items-center space-x-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors"
+              >
+                {loading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    <span>Đang tạo...</span>
+                  </>
+                ) : (
+                  <>
+                    <FaSave className="w-4 h-4" />
+                    <span>Tạo profile</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
