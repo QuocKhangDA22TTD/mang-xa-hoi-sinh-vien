@@ -14,7 +14,7 @@ function RegisterPage() {
 
     try {
       const res = await fetch(
-        'http://daring-embrace-production.up.railway.app/api/auth/register',
+        'https://daring-embrace-production.up.railway.app/api/auth/register',
         {
           method: 'POST',
           headers: {
