@@ -1,8 +1,44 @@
-# React + Vite
+# Frontend - MXHSV
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 🔧 API Configuration
 
-Currently, two official plugins are available:
+### Environment Variables:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Local**: `VITE_API_URL=http://localhost:5000`
+- **Production**: `VITE_API_URL=https://daring-embrace-production.up.railway.app`
+
+### Auto-detection:
+
+Frontend tự động detect environment dựa trên hostname:
+
+- `localhost` → `http://localhost:5000`
+- Railway domain → `https://daring-embrace-production.up.railway.app`
+
+## 🚀 Deployment
+
+### Railway Environment Variables:
+
+Không cần set VITE_API_URL trên Railway vì frontend tự detect.
+
+### Build Commands:
+
+- **Development**: `npm run dev`
+- **Production**: `npm run build`
+
+## 🔍 Debug
+
+Kiểm tra console log để xem API URL được sử dụng:
+
+```
+🌐 API Configuration:
+- hostname: mang-xa-hoi-sinh-vien-production.up.railway.app
+- isProduction: true
+- Final API_BASE_URL: https://daring-embrace-production.up.railway.app
+```
+
+## 📋 Files:
+
+- `src/config/api.js` - API configuration
+- `.env` - Local environment
+- `.env.production` - Production environment
+- `vite.config.js` - Vite configuration

@@ -39,12 +39,14 @@ NODE_ENV=production
 
 ## 🎯 Bước tiếp theo:
 
-### 1. ✅ Đã sửa CORS issue:
+### 1. ✅ Đã sửa CORS + API URL issue:
 
 - Thêm backend URL vào allowedOrigins
 - Cập nhật CORS config với preflight support
-- Tạo API config file cho frontend
+- Tạo API config file cho frontend với auto-detection
 - Cập nhật tất cả pages sử dụng API_ENDPOINTS
+- Thêm environment files cho frontend (.env, .env.production)
+- Frontend tự động detect production/development environment
 
 ### 2. Thêm environment variables còn thiếu vào Railway:
 
