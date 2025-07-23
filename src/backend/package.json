@@ -5,6 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
+    "test-db": "node test-db.js",
+    "test-railway": "node test-railway-db.js",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
