@@ -49,9 +49,9 @@ const MessageList = memo(function MessageList({
 
   return (
     <div className="h-full overflow-y-auto p-4 space-y-3">
-      {processedMessages.map((message) => (
+      {processedMessages.map((message, index) => (
         <div
-          key={message.id}
+          key={message.id ? `message-${message.id}` : `message-${index}`}
           className={`flex ${
             message.sender === 'me' ? 'justify-end' : 'justify-start'
           }`}

@@ -93,21 +93,13 @@ export async function sendFileMessage(conversationId, file, text = '') {
 }
 
 // Tạo cuộc trò chuyện mới
-export async function createConversation(
-  memberIds,
-  isGroup = false,
-  name = null
-) {
-  console.log('🔍 API createConversation called with:', {
-    memberIds,
-    isGroup,
-    name,
-  });
+export async function createConversation(conversationData) {
+  console.log('🔍 API createConversation called with:', conversationData);
 
   const requestBody = {
-    member_ids: memberIds,
-    is_group: isGroup,
-    name,
+    member_ids: conversationData.member_ids,
+    is_group: conversationData.is_group,
+    name: conversationData.name,
   };
 
   console.log('🔍 Request body:', requestBody);
@@ -135,7 +127,7 @@ export async function createConversation(
 
     const result = await res.json();
     console.log('🔍 API Success result:', result);
-    return result;
+    return result.conversation || result;
   } catch (error) {
     console.error('🔍 Fetch Error:', error);
     throw error;

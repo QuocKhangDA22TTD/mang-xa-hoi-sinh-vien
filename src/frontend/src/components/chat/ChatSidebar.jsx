@@ -5,10 +5,12 @@ import {
   FaPlus,
   FaArrowLeft,
   FaSearch,
+  FaUsers,
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import ConversationList from './ConversationList';
 import FriendsList from './FriendsList';
+import CreateGroupModal from './CreateGroupModal';
 
 function ChatSidebar({
   activeTab,
@@ -24,6 +26,7 @@ function ChatSidebar({
 }) {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
 
   const filteredConversations = conversations.filter(
     (conv) =>
@@ -52,12 +55,22 @@ function ChatSidebar({
             <span className="font-medium">Trở về</span>
           </button>
 
-          <button
-            onClick={onRefresh}
-            className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          >
-            <FaPlus className="w-4 h-4" />
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setShowCreateGroupModal(true)}
+              className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+              title="Tạo nhóm chat"
+            >
+              <FaUsers className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onRefresh}
+              className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              title="Làm mới"
+            >
+              <FaPlus className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
@@ -122,6 +135,17 @@ function ChatSidebar({
           />
         )}
       </div>
+
+      {/* Create Group Modal */}
+      <CreateGroupModal
+        isOpen={showCreateGroupModal}
+        onClose={() => setShowCreateGroupModal(false)}
+        onGroupCreated={(newGroup) => {
+          setShowCreateGroupModal(false);
+          onRefresh(); // Refresh conversations list
+          onConversationSelect(newGroup); // Select the new group
+        }}
+      />
     </div>
   );
 }

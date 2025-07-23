@@ -14,6 +14,14 @@ const FriendsList = memo(function FriendsList({
 }) {
   const handleClick = onFriendClick || onSelect;
 
+  const handleFriendClick = (friendData) => {
+    console.log('🔍 FriendsList - Friend clicked:', friendData);
+    console.log('🔍 FriendsList - handleClick function:', typeof handleClick);
+    if (handleClick) {
+      handleClick(friendData);
+    }
+  };
+
   const avatarSizeClasses = {
     small: 'w-8 h-8',
     medium: 'w-10 h-10',
@@ -40,7 +48,7 @@ const FriendsList = memo(function FriendsList({
       <div className={skeletonContainer}>
         {[...Array(skeletonCount)].map((_, i) => (
           <div
-            key={i}
+            key={`skeleton-${i}`}
             className={`flex items-center space-x-3 ${itemClasses[variant]} animate-pulse`}
           >
             <div
@@ -123,7 +131,7 @@ const FriendsList = memo(function FriendsList({
         return (
           <div
             key={`friend-${friendData.id}`}
-            onClick={() => handleClick?.(friendData)}
+            onClick={() => handleFriendClick(friendData)}
             className={`flex items-center space-x-3 ${itemClasses[variant]} rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors`}
           >
             <div className="relative">

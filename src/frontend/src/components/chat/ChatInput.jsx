@@ -27,18 +27,35 @@ function ChatInput({ onSendMessage, onSendFile, isUploading, disabled }) {
   };
 
   const handleFileSelect = (event) => {
+    console.log('🔍 ChatInput - File select triggered');
+    console.log('🔍 ChatInput - Files:', event.target.files);
+
     const file = event.target.files[0];
+    console.log('🔍 ChatInput - Selected file:', file);
+    console.log('🔍 ChatInput - onSendFile function:', typeof onSendFile);
+
     if (file && onSendFile) {
+      console.log('✅ ChatInput - Calling onSendFile with:', file.name);
       onSendFile(file);
       // Clear file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+    } else {
+      console.warn('⚠️ ChatInput - No file or onSendFile missing');
     }
   };
 
   const handleFileButtonClick = () => {
-    fileInputRef.current?.click();
+    console.log('🔍 ChatInput - File button clicked');
+    console.log('🔍 ChatInput - fileInputRef.current:', fileInputRef.current);
+
+    if (fileInputRef.current) {
+      console.log('✅ ChatInput - Triggering file input click');
+      fileInputRef.current.click();
+    } else {
+      console.error('❌ ChatInput - fileInputRef.current is null');
+    }
   };
 
   // Close emoji picker when clicking outside
@@ -54,6 +71,13 @@ function ChatInput({ onSendMessage, onSendFile, isUploading, disabled }) {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showEmojiPicker]);
+
+  // Debug: Check file input ref on mount
+  useEffect(() => {
+    console.log('🔍 ChatInput - Component mounted');
+    console.log('🔍 ChatInput - fileInputRef on mount:', fileInputRef.current);
+    console.log('🔍 ChatInput - onSendFile prop:', typeof onSendFile);
+  }, [onSendFile]);
 
   return (
     <div className="p-3 border-t border-gray-200 dark:border-gray-700 relative bg-white dark:bg-gray-800">
@@ -98,8 +122,9 @@ function ChatInput({ onSendMessage, onSendFile, isUploading, disabled }) {
           ref={fileInputRef}
           type="file"
           onChange={handleFileSelect}
-          accept="image/*,.pdf,.doc,.docx,.txt"
+          accept="image/*,video/*,.pdf,.doc,.docx,.txt,.zip,.rar"
           className="hidden"
+          multiple={false}
         />
 
         <input

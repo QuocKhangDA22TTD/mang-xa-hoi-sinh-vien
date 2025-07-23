@@ -1,6 +1,13 @@
-import { FaCircle, FaPhone, FaVideo, FaEllipsisV } from 'react-icons/fa';
+import {
+  FaCircle,
+  FaPhone,
+  FaVideo,
+  FaEllipsisV,
+  FaUsers,
+  FaCog,
+} from 'react-icons/fa';
 
-function ChatHeader({ conversation }) {
+function ChatHeader({ conversation, onGroupManage }) {
   if (!conversation) return null;
 
   const getConversationName = () => {
@@ -70,6 +77,16 @@ function ChatHeader({ conversation }) {
 
       {/* Right side - Action buttons */}
       <div className="flex items-center space-x-2">
+        {conversation.is_group && (
+          <button
+            onClick={onGroupManage}
+            className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+            title="Quản lý nhóm"
+          >
+            <FaCog className="w-4 h-4" />
+          </button>
+        )}
+
         {!conversation.is_group && (
           <>
             <button className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">

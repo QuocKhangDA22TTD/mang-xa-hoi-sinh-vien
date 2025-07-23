@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
-const chatController = require('../controllers/chat.controller');
+const conversationsController = require('../controllers/conversationsController');
+const messagesController = require('../controllers/messagesController');
 const verifyToken = require('../middleware/verifyToken');
 
 // Configure multer for chat file uploads
@@ -37,24 +38,58 @@ const upload = multer({
   },
 });
 
-router.post('/conversations', verifyToken, chatController.createConversation);
-router.get('/conversations/me', verifyToken, chatController.getMyConversations);
+router.post(
+  '/conversations',
+  verifyToken,
+  conversationsController.createConversation
+);
+router.get(
+  '/conversations/me',
+  verifyToken,
+  conversationsController.getMyConversations
+);
 // Text messages (no file upload)
-router.post('/messages', verifyToken, chatController.sendMessage);
+router.post('/messages', verifyToken, messagesController.sendMessage);
 
 // File messages (with file upload)
 router.post(
   '/messages/file',
   verifyToken,
   upload.single('file'),
-  chatController.sendMessage
+  messagesController.sendMessage
 );
 router.get(
   '/messages/:conversationId',
   verifyToken,
-  chatController.getMessages
+  messagesController.getMessages
 );
-router.get('/unread-counts', verifyToken, chatController.getUnreadCounts);
-router.post('/mark-read', verifyToken, chatController.markMessagesAsRead);
+router.get(
+  '/unread-counts',
+  verifyToken,
+  conversationsController.getUnreadCounts
+);
+router.post('/mark-read', verifyToken, messagesController.markMessagesAsRead);
+
+// Group management routes
+router.post(
+  '/conversations/:conversationId/members',
+  verifyToken,
+  conversationsController.addMemberToGroup
+);
+router.delete(
+  '/conversations/:conversationId/members/:userId',
+  verifyToken,
+  conversationsController.removeMemberFromGroup
+);
+router.get(
+  '/conversations/:conversationId/members',
+  verifyToken,
+  conversationsController.getGroupMembers
+);
+router.put(
+  '/conversations/:conversationId',
+  verifyToken,
+  conversationsController.updateGroupInfo
+);
 
 module.exports = router;

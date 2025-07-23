@@ -26,7 +26,10 @@ function LeftBar() {
         </div>
         <div className="space-y-3">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-10 bg-gray-300 rounded-lg"></div>
+            <div
+              key={`leftbar-skeleton-${i}`}
+              className="h-10 bg-gray-300 rounded-lg"
+            ></div>
           ))}
         </div>
       </div>
@@ -93,7 +96,7 @@ function LeftBar() {
           const Icon = item.icon;
           return (
             <button
-              key={index}
+              key={`nav-${item.path}-${index}`}
               onClick={() => navigate(item.path)}
               className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
                 item.active
@@ -117,7 +120,7 @@ function LeftBar() {
           const Icon = item.icon;
           return (
             <button
-              key={index}
+              key={`quick-${item.path}-${index}`}
               onClick={() => navigate(item.path)}
               className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-all duration-200"
             >
