@@ -72,9 +72,21 @@ Backend bị crash do Express 5.x có vấn đề với route parsing.
 - Tạo simple-server.js để test CORS trước
 - Thay đổi start script: `"start": "node simple-server.js"`
 
-### 5. Deploy lại backend service với simple server
+### 5. 🚨 EMERGENCY: Backend đang crash (502 Bad Gateway)
 
-**Quan trọng**: Sử dụng simple server để test CORS trước!
+**Vấn đề**: Railway backend không start được, trả về 502 error.
+
+**Nguyên nhân**: Express 5.x path-to-regexp bug vẫn chưa được fix trên Railway.
+
+**Giải pháp khẩn cấp**:
+
+1. ✅ Tạo `minimal-server.js` - chỉ có Express 4.x + CORS
+2. ✅ Thay đổi start script: `"start": "node minimal-server.js"`
+3. 🚨 **DEPLOY NGAY** để fix 502 error
+
+### 6. Deploy minimal server NGAY
+
+**CRITICAL**: Phải deploy để fix crash trước khi test CORS!
 
 ### 5. Test CORS và đăng ký
 

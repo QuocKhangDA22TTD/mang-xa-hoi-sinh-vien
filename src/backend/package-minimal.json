@@ -1,0 +1,14 @@
+{
+  "name": "backend-minimal",
+  "version": "1.0.0",
+  "main": "minimal-server.js",
+  "scripts": {
+    "start": "node minimal-server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

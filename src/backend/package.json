@@ -4,9 +4,10 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node simple-server.js",
+    "start": "node minimal-server.js",
     "start-full": "node index.js",
     "simple": "node simple-server.js",
+    "minimal": "node minimal-server.js",
     "test-db": "node test-db.js",
     "test-railway": "node test-railway-db.js",
     "test-cors": "node test-railway-cors.js",
