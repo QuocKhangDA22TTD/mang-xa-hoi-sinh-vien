@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Button from '../components/Button';
+import { API_ENDPOINTS } from '../config/api';
 
 function RegisterPage() {
   const [email, setEmail] = useState('');
@@ -13,16 +14,13 @@ function RegisterPage() {
     }
 
     try {
-      const res = await fetch(
-        'https://daring-embrace-production.up.railway.app/api/auth/register',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, password }),
-        }
-      );
+      const res = await fetch(API_ENDPOINTS.AUTH.REGISTER, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
       if (!res.ok) throw new Error('Đăng ký thất bại');
 

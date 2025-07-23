@@ -5,6 +5,7 @@ import EmojiPicker from 'emoji-picker-react';
 import PostTitle from '../features/post/PostTitle';
 import Avatar from '../features/post/Avatar';
 import Button from '../components/Button';
+import { API_ENDPOINTS } from '../config/api';
 
 function CreatePostPage() {
   const [value, setValue] = useState('');
@@ -22,7 +23,7 @@ function CreatePostPage() {
     };
 
     try {
-      const res = await fetch('http://localhost:5000/api/posts', {
+      const res = await fetch(API_ENDPOINTS.POSTS.CREATE, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

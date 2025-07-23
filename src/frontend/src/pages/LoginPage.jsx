@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Button from '../components/Button';
+import { API_ENDPOINTS } from '../config/api';
 
 function LoginPage() {
   const [email, setEmail] = useState('');
@@ -8,7 +9,7 @@ function LoginPage() {
 
   const handleLogin = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/auth/login', {
+      const res = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -37,7 +38,11 @@ function LoginPage() {
         <div className="flex flex-col justify-center items-center w-[40%] bg-[#0582CA]">
           <div className="bg-[#EEE] w-[6rem] h-[6rem] rounded-full flex items-center justify-center">
             <div className="text-center font-semibold text-xs text-black">
-              <img src="../../public/demo_avatar.jpg" alt="Logo" className="w-8 h-8 mx-auto mb-1" />
+              <img
+                src="../../public/demo_avatar.jpg"
+                alt="Logo"
+                className="w-8 h-8 mx-auto mb-1"
+              />
               CHÉMNET
             </div>
           </div>
@@ -45,7 +50,9 @@ function LoginPage() {
 
         {/* Phần form */}
         <div className="flex flex-col flex-1 px-8 py-6 justify-center">
-          <h1 className="text-center text-xl font-semibold text-[#0F0F0F] mb-6">ĐĂNG NHẬP</h1>
+          <h1 className="text-center text-xl font-semibold text-[#0F0F0F] mb-6">
+            ĐĂNG NHẬP
+          </h1>
 
           <input
             type="email"
