@@ -42,62 +42,31 @@ app.options('*', (req, res) => {
 
 app.use(express.json());
 
-// Manual CORS headers middleware
+// AGGRESSIVE CORS FIX - Set headers on ALL responses
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   console.log(`📝 ${req.method} ${req.path} from origin: ${origin}`);
 
-  // Set CORS headers manually
-  if (origin && allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-  } else if (!origin) {
-    res.header('Access-Control-Allow-Origin', '*');
-  }
-
+  // ALWAYS set CORS headers
+  res.header('Access-Control-Allow-Origin', '*');
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header(
+    'Access-Control-Allow-Headers',
+    'Content-Type, Authorization, X-Requested-With'
+  );
+  res.header('Access-Control-Allow-Credentials', 'false'); // Changed to false for wildcard origin
 
-  // Handle preflight
+  // Handle ALL OPTIONS requests immediately
   if (req.method === 'OPTIONS') {
-    console.log('✅ Handling OPTIONS preflight request');
-    return res.sendStatus(200);
+    console.log('✅ Handling OPTIONS preflight request - sending 200');
+    return res.status(200).end();
   }
 
   next();
 });
 
-// Temporary: Allow all origins for debugging
-app.use(
-  cors({
-    origin: true, // Allow all origins temporarily
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-  })
-);
-
-// Original CORS config (commented out for debugging)
-/*
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      console.log('🔍 CORS check for origin:', origin);
-      // Cho phép requests không có origin (như Postman, mobile apps)
-      if (!origin || allowedOrigins.includes(origin)) {
-        console.log('✅ CORS allowed for origin:', origin);
-        callback(null, true);
-      } else {
-        console.log('❌ CORS blocked origin:', origin);
-        callback(new Error('Not allowed by CORS'));
-      }
-    },
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
-  })
-);
-*/
+// CORS middleware removed - using manual headers only
+console.log('� CORS middleware disabled - using manual headers');
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -108,15 +77,33 @@ app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Test endpoint
-app.get('/api/test', (req, res) => {
+// CORS test endpoint with explicit headers
+app.all('/api/test', (req, res) => {
   console.log('🧪 Test endpoint called from:', req.headers.origin);
+
+  // Set CORS headers explicitly again
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   res.json({
     message: 'CORS test successful!',
+    method: req.method,
     origin: req.headers.origin,
     timestamp: new Date().toISOString(),
     allowedOrigins: allowedOrigins,
+    headers: req.headers,
   });
+});
+
+// Simple endpoint without any middleware
+app.get('/simple', (req, res) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.json({ message: 'Simple endpoint works!' });
 });
 
 app.use('/api/posts', postRoutes);
