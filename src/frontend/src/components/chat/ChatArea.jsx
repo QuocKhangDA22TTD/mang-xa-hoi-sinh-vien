@@ -1,15 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
 import { FaComments } from 'react-icons/fa';
-import { getMessages, sendMessage } from '../../api/chat';
+import { getMessages, sendMessage, sendFileMessage } from '../../api/chat';
 import ChatHeader from './ChatHeader';
 import ChatMessages from './ChatMessages';
-import ChatInputArea from './ChatInputArea';
+import ChatInput from './ChatInput';
+import GroupManagementModal from './GroupManagementModal';
 
 function ChatArea({ selectedChat, user, socket, onConversationUpdate }) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [showGroupManagement, setShowGroupManagement] = useState(false);
   const messagesEndRef = useRef(null);
 
   // Load messages when chat is selected
@@ -33,14 +36,18 @@ function ChatArea({ selectedChat, user, socket, onConversationUpdate }) {
           sender_id: messageData.sender_id,
           sent_at: messageData.sent_at,
           sender_email: messageData.sender_email,
+          sender_name: messageData.sender_name,
+          sender_avatar: messageData.sender_avatar,
+          message_type: messageData.message_type || 'text',
+          attachment_url: messageData.attachment_url,
         };
-        setMessages(prev => [...prev, newMsg]);
+        setMessages((prev) => [...prev, newMsg]);
         scrollToBottom();
       }
     };
 
-    socket.on('receive_message', handleNewMessage);
-    return () => socket.off('receive_message', handleNewMessage);
+    socket.on('new_message', handleNewMessage);
+    return () => socket.off('new_message', handleNewMessage);
   }, [socket, selectedChat]);
 
   // Auto scroll to bottom
@@ -66,37 +73,35 @@ function ChatArea({ selectedChat, user, socket, onConversationUpdate }) {
     }
   };
 
-  const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedChat || sending) return;
+  const handleSendMessage = async (text) => {
+    const messageText = text?.trim() || newMessage.trim();
+    if (!messageText || !selectedChat || sending) return;
 
-    const messageText = newMessage.trim();
     setNewMessage('');
 
     try {
       setSending(true);
-      
-      // Add message to local state immediately for better UX
-      const tempMessage = {
-        id: Date.now(), // Temporary ID
+
+      // Send message to server first
+      const sentMessage = await sendMessage(selectedChat.id, messageText);
+
+      // Add message to local state with real ID
+      const newMessage = {
+        id: sentMessage.data?.id || sentMessage.id || Date.now(),
         text: messageText,
         sender_id: user.id,
-        sent_at: new Date().toISOString(),
+        sent_at:
+          sentMessage.data?.sent_at ||
+          sentMessage.sent_at ||
+          new Date().toISOString(),
         sender_email: user.email,
-        sending: true,
+        sender_name: user.full_name || user.name,
+        sender_avatar: user.avatar_url,
+        message_type: 'text',
+        attachment_url: null,
       };
-      setMessages(prev => [...prev, tempMessage]);
 
-      // Send message to server
-      const sentMessage = await sendMessage(selectedChat.id, messageText);
-      
-      // Update the temporary message with real data
-      setMessages(prev => 
-        prev.map(msg => 
-          msg.id === tempMessage.id 
-            ? { ...sentMessage, sender_email: user.email, sending: false }
-            : msg
-        )
-      );
+      setMessages((prev) => [...prev, newMessage]);
 
       // Emit to socket for real-time updates
       if (socket) {
@@ -110,11 +115,10 @@ function ChatArea({ selectedChat, user, socket, onConversationUpdate }) {
 
       // Update conversation list
       onConversationUpdate?.();
-      
     } catch (error) {
       console.error('Lỗi khi gửi tin nhắn:', error);
       // Remove the failed message
-      setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id));
+      setMessages((prev) => prev.filter((msg) => msg.id !== tempMessage.id));
       // Restore the message text
       setNewMessage(messageText);
     } finally {
@@ -122,10 +126,67 @@ function ChatArea({ selectedChat, user, socket, onConversationUpdate }) {
     }
   };
 
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
+  const handleSendFile = async (file) => {
+    if (!file || !selectedChat || !user) return;
+
+    try {
+      setIsUploading(true);
+      console.log('🔍 Sending file:', file.name);
+
+      // Send file via API
+      const sentMessage = await sendFileMessage(selectedChat.id, file);
+      console.log('🔍 File sent successfully:', sentMessage);
+
+      // Determine message type based on file type
+      const messageType = file.type.startsWith('image/') ? 'image' : 'file';
+      console.log(
+        '🔍 ChatArea - File type:',
+        file.type,
+        '→ Message type:',
+        messageType
+      );
+
+      // Add message to local state with real data
+      const newMsg = {
+        id: sentMessage.data?.id || sentMessage.id || Date.now(),
+        text: file.name,
+        sender_id: user.id,
+        sent_at:
+          sentMessage.data?.sent_at ||
+          sentMessage.sent_at ||
+          new Date().toISOString(),
+        sender_email: user.email,
+        sender_name: user.full_name || user.name,
+        sender_avatar: user.avatar_url,
+        message_type: messageType,
+        attachment_url:
+          sentMessage.data?.attachment_url || sentMessage.attachment_url,
+      };
+
+      setMessages((prev) => [...prev, newMsg]);
+
+      // Emit to socket for real-time updates
+      if (socket) {
+        socket.emit('send_message', {
+          conversation_id: selectedChat.id,
+          text: file.name,
+          sender_id: user.id,
+          sender_email: user.email,
+          sender_name: user.full_name || user.name,
+          sender_avatar: user.avatar_url,
+          message_type: messageType,
+          attachment_url:
+            sentMessage.data?.attachment_url || sentMessage.attachment_url,
+        });
+      }
+
+      // Update conversation list
+      onConversationUpdate?.();
+    } catch (error) {
+      console.error('❌ Lỗi khi gửi file:', error);
+      alert('Không thể gửi file. Vui lòng thử lại!');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -151,7 +212,10 @@ function ChatArea({ selectedChat, user, socket, onConversationUpdate }) {
   return (
     <div className="flex-1 flex flex-col bg-white dark:bg-gray-800">
       {/* Chat Header */}
-      <ChatHeader conversation={selectedChat} />
+      <ChatHeader
+        conversation={selectedChat}
+        onGroupManage={() => setShowGroupManagement(true)}
+      />
 
       {/* Messages Area */}
       <div className="flex-1 overflow-hidden">
@@ -164,14 +228,36 @@ function ChatArea({ selectedChat, user, socket, onConversationUpdate }) {
       </div>
 
       {/* Input Area */}
-      <ChatInputArea
-        message={newMessage}
-        onMessageChange={setNewMessage}
-        onSend={handleSendMessage}
-        onKeyPress={handleKeyPress}
-        sending={sending}
+      <ChatInput
+        onSendMessage={(text) => {
+          setNewMessage('');
+          handleSendMessage(text);
+        }}
+        onSendFile={handleSendFile}
+        isUploading={isUploading}
         disabled={!selectedChat}
       />
+
+      {/* Group Management Modal */}
+      {selectedChat?.is_group && (
+        <GroupManagementModal
+          isOpen={showGroupManagement}
+          onClose={() => setShowGroupManagement(false)}
+          conversation={selectedChat}
+          onMemberAdded={() => {
+            // Refresh conversation data if needed
+            onConversationUpdate && onConversationUpdate();
+          }}
+          onMemberRemoved={() => {
+            // Refresh conversation data if needed
+            onConversationUpdate && onConversationUpdate();
+          }}
+          onGroupUpdated={() => {
+            // Refresh conversation data if needed
+            onConversationUpdate && onConversationUpdate();
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -174,7 +174,7 @@ function HomePage() {
                           {recentSearches.length > 0 ? (
                             recentSearches.map((search, index) => (
                               <div
-                                key={index}
+                                key={`search-${search}-${index}`}
                                 className="p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg cursor-pointer"
                               >
                                 <div className="flex items-center space-x-3">

@@ -35,7 +35,7 @@ export function AuthProvider({ children }) {
     const handleBeforeUnload = () => {
       // Use sendBeacon for reliable offline status update
       navigator.sendBeacon(
-        '/api/auth/set-offline',
+        'http://localhost:5000/api/auth/set-offline',
         JSON.stringify({ userId: user.id })
       );
     };
@@ -45,7 +45,7 @@ export function AuthProvider({ children }) {
         // User switched tab or minimized - set offline after delay
         setTimeout(() => {
           if (document.hidden) {
-            fetch('/api/auth/set-offline', {
+            fetch('http://localhost:5000/api/auth/set-offline', {
               method: 'POST',
               credentials: 'include',
               headers: { 'Content-Type': 'application/json' },
