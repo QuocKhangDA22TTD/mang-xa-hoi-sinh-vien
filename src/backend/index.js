@@ -44,6 +44,10 @@ const io = require('socket.io')(server, {
     credentials: true,
   },
 });
+
+// Make io available to routes
+app.set('io', io);
+
 setupSocket(io); // gọi file socket.js
 
 const PORT = process.env.PORT || 5000;
