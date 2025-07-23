@@ -8,7 +8,12 @@ export async function getFriends() {
     credentials: 'include',
   });
 
-  if (!res.ok) throw new Error('Không lấy được danh sách bạn bè');
+  if (!res.ok) {
+    const errorText = await res.text();
+    throw new Error(
+      `HTTP ${res.status}: ${errorText || 'Không lấy được danh sách bạn bè'}`
+    );
+  }
 
   return res.json();
 }

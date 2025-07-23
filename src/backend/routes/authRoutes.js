@@ -10,6 +10,12 @@ router.post('/login', authController.login);
 
 router.post('/logout', authController.logout);
 
+// Set user offline (for page unload events)
+router.post('/set-offline', authController.setOffline);
+
+// Heartbeat to keep user online
+router.post('/heartbeat', verifyToken, authController.heartbeat);
+
 // Route kiểm tra token hợp lệ và lấy thông tin người dùng
 router.get('/me', verifyToken, (req, res) => {
   res.json({

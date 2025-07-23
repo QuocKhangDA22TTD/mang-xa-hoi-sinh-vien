@@ -38,7 +38,7 @@ function CreateProfile() {
   const [birthday, setBirthday] = useState('');
   const [address, setAddress] = useState('');
   const [bio, setBio] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('/default-avatar.png');
+  const [avatarUrl, setAvatarUrl] = useState('/demo-avatar.svg');
 
   const handleAvatarChange = (event) => {
     const file = event.target.files[0];
