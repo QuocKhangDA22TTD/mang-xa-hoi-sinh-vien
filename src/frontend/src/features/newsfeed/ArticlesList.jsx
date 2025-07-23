@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import Article from './Article';
 import { FaEdit, FaSpinner } from 'react-icons/fa';
 
@@ -6,29 +7,36 @@ function ArticlesList() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const location = useLocation();
+
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch('http://localhost:5000/api/posts/', {
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        throw new Error('Không thể tải bài viết');
+      }
+
+      const data = await response.json();
+      setPosts(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err.message);
+      console.error('Lỗi khi fetch:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('http://localhost:5000/api/posts/', {
-          credentials: 'include',
-        });
+    fetchPosts();
+  }, [location.state?.refresh]); // Refresh khi có state.refresh từ navigation
 
-        if (!response.ok) {
-          throw new Error('Không thể tải bài viết');
-        }
-
-        const data = await response.json();
-        setPosts(Array.isArray(data) ? data : []);
-      } catch (err) {
-        setError(err.message);
-        console.error('Lỗi khi fetch:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
+  // Thêm effect để refresh khi component mount lại
+  useEffect(() => {
     fetchPosts();
   }, []);
 
@@ -56,7 +64,7 @@ function ArticlesList() {
         </h3>
         <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
         <button
-          onClick={() => window.location.reload()}
+          onClick={fetchPosts}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
         >
           Thử lại

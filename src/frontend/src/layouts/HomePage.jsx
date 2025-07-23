@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { getMe } from '../api/auth';
 import LeftBar from '../features/newsfeed/LeftBar';
 import Content from '../features/newsfeed/Content';
@@ -27,6 +27,7 @@ function HomePage() {
   const [searchResults, setSearchResults] = useState([]);
   const [recentSearches, setRecentSearches] = useState([]);
   const navigate = useNavigate();
+  const location = useLocation();
   const { isDark, toggleTheme } = useTheme();
 
   useEffect(() => {
@@ -61,6 +62,13 @@ function HomePage() {
 
     checkProfile();
   }, [navigate]);
+
+  // Reset currentView khi có refresh state từ CreatePostPage
+  useEffect(() => {
+    if (location.state?.refresh) {
+      setCurrentView('newsfeed');
+    }
+  }, [location.state?.refresh]);
 
   if (isChecking) {
     return (

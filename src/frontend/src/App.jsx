@@ -10,6 +10,7 @@ import FriendsPage from './pages/FriendsPage';
 import CreateAPersonalProfile from './pages/CreateAPersonalProfile';
 import UpdateProfile from './pages/UpdateProfile';
 import PersonalProfile from './pages/PersonalProfile';
+import CreatePostPage from './pages/CreatePostPage';
 
 import { SocketProvider } from './context/SocketContext';
 import { AuthProvider } from './context/AuthContext';
@@ -62,6 +63,14 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <FriendsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/create-post"
+                element={
+                  <ProtectedRoute>
+                    <CreatePostPage />
                   </ProtectedRoute>
                 }
               />
