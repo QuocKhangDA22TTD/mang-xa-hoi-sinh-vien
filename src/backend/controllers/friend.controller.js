@@ -23,6 +23,14 @@ exports.getFriends = async (req, res) => {
                 WHEN fr.sender_id = ? THEN p2.avatar_url
                 ELSE p1.avatar_url
               END as friend_avatar,
+              CASE
+                WHEN fr.sender_id = ? THEN u2.last_active
+                ELSE u1.last_active
+              END as last_active,
+              CASE
+                WHEN fr.sender_id = ? THEN u2.is_online
+                ELSE u1.is_online
+              END as is_online,
               fr.updated_at as became_friends_at
        FROM friend_requests fr
        JOIN users u1 ON fr.sender_id = u1.id
@@ -32,7 +40,7 @@ exports.getFriends = async (req, res) => {
        WHERE (fr.sender_id = ? OR fr.receiver_id = ?)
        AND fr.status = 'accepted'
        ORDER BY fr.updated_at DESC`,
-      [user_id, user_id, user_id, user_id, user_id, user_id]
+      [user_id, user_id, user_id, user_id, user_id, user_id, user_id, user_id]
     );
 
     res.json(friends);

@@ -12,6 +12,7 @@ const postRoutes = require('./routes/postRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const friendRoutes = require('./routes/friend.routes');
 const setupSocket = require('./sockets/socket');
+const userStatusService = require('./services/userStatusService');
 
 const app = express();
 const server = http.createServer(app); // dùng server http để tích hợp socket.io

@@ -9,11 +9,6 @@ router.use(verifyToken);
 // Lấy danh sách bạn bè
 router.get('/friends', friendController.getFriends);
 
-module.exports = router;
-
-// Tất cả routes đều cần authentication
-router.use(verifyToken);
-
 // Gửi lời mời kết bạn
 router.post('/requests', friendController.sendFriendRequest);
 
@@ -34,9 +29,6 @@ router.put(
   '/requests/:request_id/decline',
   friendController.declineFriendRequest
 );
-
-// Lấy danh sách bạn bè
-router.get('/friends', friendController.getFriends);
 
 // Hủy kết bạn
 router.delete('/friends/:friend_id', friendController.unfriend);
