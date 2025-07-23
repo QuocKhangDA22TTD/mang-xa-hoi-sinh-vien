@@ -8,6 +8,15 @@ function socketHandler(io) {
       console.log(`👤 User ${userId} joined room`);
     });
 
+    // Join user room for personal notifications
+    socket.on('join_user_room', (userId) => {
+      socket.join(`user_${userId}`);
+      console.log(`👤 User ${userId} joined personal room: user_${userId}`);
+
+      // Confirm to client that they joined
+      socket.emit('joined_user_room', { userId, room: `user_${userId}` });
+    });
+
     // Khi client gửi tin nhắn (chỉ để broadcast, không lưu DB)
     socket.on('broadcast_message', (messageData) => {
       console.log('🔍 Socket broadcasting message:', messageData);
