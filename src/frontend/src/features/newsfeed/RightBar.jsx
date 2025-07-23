@@ -119,7 +119,7 @@ function RightBar() {
         <div className="space-y-3">
           {trendingTopics.map((topic, index) => (
             <div
-              key={index}
+              key={`topic-${topic.tag}-${index}`}
               className="flex items-center justify-between p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
             >
               <div>

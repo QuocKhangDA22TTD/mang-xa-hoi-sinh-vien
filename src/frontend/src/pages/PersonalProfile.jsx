@@ -28,7 +28,7 @@ function PersonalProfile() {
         setLoading(true);
         const currentUser = await getMe();
         const targetUserId = userId || currentUser.id;
-        
+
         // Check if viewing own profile
         setIsOwnProfile(!userId || userId === currentUser.id.toString());
 
@@ -81,7 +81,9 @@ function PersonalProfile() {
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center transition-colors">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Đang tải profile...</p>
+          <p className="text-gray-600 dark:text-gray-300">
+            Đang tải profile...
+          </p>
         </div>
       </div>
     );
@@ -92,7 +94,7 @@ function PersonalProfile() {
       <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center transition-colors">
         <div className="text-center">
           <p className="text-red-600 dark:text-red-400">{error}</p>
-          <button 
+          <button
             onClick={() => navigate(-1)}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
@@ -113,7 +115,7 @@ function PersonalProfile() {
     joinDate: profile.created_at,
     bio: profile.bio,
     avatarUrl: profile.avatar_url,
-    coverUrl: '/demo_AnhBia.jpg',
+    coverUrl: profile.banner_url || '/demo_AnhBia.jpg',
   };
 
   return (
@@ -126,10 +128,10 @@ function PersonalProfile() {
             alt="Cover"
             className="w-full h-full object-cover"
           />
-          
+
           {/* Cover overlay for better text readability */}
           <div className="absolute inset-0 bg-black/20"></div>
-          
+
           {/* Back button */}
           {userId && (
             <button
@@ -139,7 +141,7 @@ function PersonalProfile() {
               <FaArrowLeft className="w-5 h-5" />
             </button>
           )}
-          
+
           {/* Cover photo edit button */}
           {isOwnProfile && (
             <button className="absolute bottom-6 right-6 p-3 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors">
@@ -176,17 +178,22 @@ function PersonalProfile() {
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
                   @{profileData.username}
                 </p>
-                
+
                 {profileData.bio && (
                   <p className="text-gray-700 dark:text-gray-300 mb-4 max-w-2xl">
                     {profileData.bio}
                   </p>
                 )}
-                
+
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                   <div className="flex items-center space-x-1">
                     <FaCalendarAlt className="w-4 h-4" />
-                    <span>Sinh nhật: {new Date(profileData.birthday).toLocaleDateString('vi-VN')}</span>
+                    <span>
+                      Sinh nhật:{' '}
+                      {new Date(profileData.birthday).toLocaleDateString(
+                        'vi-VN'
+                      )}
+                    </span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <FaMapMarkerAlt className="w-4 h-4" />
@@ -194,11 +201,16 @@ function PersonalProfile() {
                   </div>
                   <div className="flex items-center space-x-1">
                     <FaCalendarAlt className="w-4 h-4" />
-                    <span>Tham gia {new Date(profileData.joinDate).toLocaleDateString('vi-VN')}</span>
+                    <span>
+                      Tham gia{' '}
+                      {new Date(profileData.joinDate).toLocaleDateString(
+                        'vi-VN'
+                      )}
+                    </span>
                   </div>
                 </div>
               </div>
-              
+
               {/* Action Buttons */}
               <div className="flex items-center space-x-3 mt-6 lg:mt-0">
                 {isOwnProfile ? (
@@ -294,7 +306,9 @@ function PersonalProfile() {
                       Chưa có bài viết nào
                     </h3>
                     <p className="text-gray-600 dark:text-gray-400">
-                      {isOwnProfile ? 'Hãy chia sẻ suy nghĩ đầu tiên của bạn!' : 'Người dùng này chưa chia sẻ bài viết nào.'}
+                      {isOwnProfile
+                        ? 'Hãy chia sẻ suy nghĩ đầu tiên của bạn!'
+                        : 'Người dùng này chưa chia sẻ bài viết nào.'}
                     </p>
                   </div>
                 )}
@@ -309,27 +323,47 @@ function PersonalProfile() {
                   </h3>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">Họ tên</span>
-                      <span className="font-medium text-gray-900 dark:text-white">{profileData.name}</span>
-                    </div>
-                    <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">Tên người dùng</span>
-                      <span className="font-medium text-gray-900 dark:text-white">@{profileData.username}</span>
-                    </div>
-                    <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">Sinh nhật</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Họ tên
+                      </span>
                       <span className="font-medium text-gray-900 dark:text-white">
-                        {new Date(profileData.birthday).toLocaleDateString('vi-VN')}
+                        {profileData.name}
                       </span>
                     </div>
                     <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                      <span className="text-gray-600 dark:text-gray-400">Địa chỉ</span>
-                      <span className="font-medium text-gray-900 dark:text-white">{profileData.address}</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Tên người dùng
+                      </span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        @{profileData.username}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Sinh nhật
+                      </span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {new Date(profileData.birthday).toLocaleDateString(
+                          'vi-VN'
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-700">
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Địa chỉ
+                      </span>
+                      <span className="font-medium text-gray-900 dark:text-white">
+                        {profileData.address}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between py-2">
-                      <span className="text-gray-600 dark:text-gray-400">Tham gia</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        Tham gia
+                      </span>
                       <span className="font-medium text-gray-900 dark:text-white">
-                        {new Date(profileData.joinDate).toLocaleDateString('vi-VN')}
+                        {new Date(profileData.joinDate).toLocaleDateString(
+                          'vi-VN'
+                        )}
                       </span>
                     </div>
                   </div>
@@ -357,7 +391,9 @@ function PersonalProfile() {
                   Chưa có ảnh nào
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  {isOwnProfile ? 'Hãy chia sẻ những khoảnh khắc đẹp của bạn!' : 'Người dùng này chưa chia sẻ ảnh nào.'}
+                  {isOwnProfile
+                    ? 'Hãy chia sẻ những khoảnh khắc đẹp của bạn!'
+                    : 'Người dùng này chưa chia sẻ ảnh nào.'}
                 </p>
               </div>
             )}
