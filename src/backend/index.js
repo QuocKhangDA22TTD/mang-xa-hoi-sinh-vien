@@ -24,7 +24,7 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: ['https://mang-xa-hoi-sinh-vien-production.up.railway.app', 'http://localhost:5173'], // thay bằng domain thật
+    origin: ['https://daring-embrace-production.up.railway.app/', 'http://localhost:5173'], // thay bằng domain thật
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
   })
@@ -35,7 +35,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Khởi chạy socket.io
 const io = require('socket.io')(server, {
   cors: {
-    origin: ['https://mang-xa-hoi-sinh-vien-production.up.railway.app'], // thêm frontend domain thật
+    origin: ['https://daring-embrace-production.up.railway.app/'], // thêm frontend domain thật
     methods: ['GET', 'POST'],
     credentials: true,
   },
