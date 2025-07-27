@@ -41,7 +41,11 @@ function App() {
                   <Route path="/update-profile" element={<UpdateProfile />} />
                   <Route
                     path="/create-profile"
-                    element={<CreateAPersonalProfile />}
+                    element={
+                      <ProtectedRoute>
+                        <CreateAPersonalProfile />
+                      </ProtectedRoute>
+                    }
                   />
                   <Route
                     path="/profile"

@@ -70,8 +70,8 @@ exports.login = async (req, res) => {
 
     res.cookie('token', token, {
       httpOnly: false,
-      secure: false, // đặt true nếu dùng HTTPS
-      sameSite: 'Lax',
+      secure: process.env.NODE_ENV === 'production', // true cho HTTPS (Railway)
+      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax', // None cho cross-origin HTTPS
       maxAge: 60 * 60 * 1000, // 1 giờ
     });
 
@@ -101,9 +101,9 @@ exports.logout = async (req, res) => {
   }
 
   res.clearCookie('token', {
-    httpOnly: true,
+    httpOnly: false, // phải giống với khi set cookie
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'Lax',
+    sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
   });
   res.json({ message: 'Logged out successfully' });
 };
