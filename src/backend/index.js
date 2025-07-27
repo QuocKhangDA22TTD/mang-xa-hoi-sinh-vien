@@ -24,7 +24,7 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: ['https://mang-xa-hoi-sinh-vien-production.up.railway.app:', 'http://localhost:5173'], // thay bằng domain thật
+    origin: ['https://mang-xa-hoi-sinh-vien-production.up.railway.app', 'http://localhost:5173'], // thay bằng domain thật
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     credentials: true,
   })
