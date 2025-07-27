@@ -1,0 +1,135 @@
+/* Custom styles for ReactQuill to match dark theme */
+
+/* Light theme styles */
+.ql-editor {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #1f2937;
+  background-color: transparent;
+}
+
+.ql-toolbar {
+  border-top: 1px solid #e5e7eb;
+  border-left: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.ql-container {
+  border-bottom: 1px solid #e5e7eb;
+  border-left: 1px solid #e5e7eb;
+  border-right: 1px solid #e5e7eb;
+  background-color: #ffffff;
+}
+
+/* Dark theme styles */
+.dark .ql-editor {
+  color: #f3f4f6;
+  background-color: transparent;
+}
+
+.dark .ql-toolbar {
+  border-color: #374151;
+  background-color: #1f2937;
+}
+
+.dark .ql-container {
+  border-color: #374151;
+  background-color: #111827;
+}
+
+.dark .ql-toolbar .ql-stroke {
+  stroke: #9ca3af;
+}
+
+.dark .ql-toolbar .ql-fill {
+  fill: #9ca3af;
+}
+
+.dark .ql-toolbar .ql-picker-label {
+  color: #9ca3af;
+}
+
+.dark .ql-toolbar .ql-picker-options {
+  background-color: #1f2937;
+  border-color: #374151;
+}
+
+.dark .ql-toolbar .ql-picker-item {
+  color: #9ca3af;
+}
+
+.dark .ql-toolbar .ql-picker-item:hover {
+  background-color: #374151;
+  color: #f3f4f6;
+}
+
+.dark .ql-toolbar button:hover {
+  background-color: #374151;
+}
+
+.dark .ql-toolbar button.ql-active {
+  background-color: #3b82f6;
+}
+
+.dark .ql-toolbar button.ql-active .ql-stroke {
+  stroke: #ffffff;
+}
+
+.dark .ql-toolbar button.ql-active .ql-fill {
+  fill: #ffffff;
+}
+
+/* Custom scrollbar for editor */
+.ql-editor::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ql-editor::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.ql-editor::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.ql-editor::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+.dark .ql-editor::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.dark .ql-editor::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark .ql-editor::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Placeholder styling */
+.ql-editor.ql-blank::before {
+  color: #9ca3af;
+  font-style: normal;
+}
+
+.dark .ql-editor.ql-blank::before {
+  color: #6b7280;
+}
+
+/* Remove default borders and add custom styling */
+.quill {
+  border: none !important;
+}
+
+.ql-toolbar {
+  border-radius: 12px 12px 0 0;
+}
+
+.ql-container {
+  border-radius: 0 0 12px 12px;
+}
