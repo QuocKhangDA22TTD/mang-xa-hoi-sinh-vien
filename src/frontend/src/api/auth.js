@@ -1,6 +1,6 @@
 // src/api/auth.js
 export async function getMe() {
-  const res = await fetch('daring-embrace-production.up.railway.app/api/auth/me', {
+  const res = await fetch('https://daring-embrace-production.up.railway.app/api/auth/me', {
     credentials: 'include',
   });
 
@@ -11,7 +11,7 @@ export async function getMe() {
 }
 
 export async function logout() {
-  const res = await fetch('daring-embrace-production.up.railway.app/api/auth/logout', {
+  const res = await fetch('https://daring-embrace-production.up.railway.app/api/auth/logout', {
     method: 'POST',
     credentials: 'include',
   });
