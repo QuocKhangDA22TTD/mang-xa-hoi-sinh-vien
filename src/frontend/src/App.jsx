@@ -10,72 +10,71 @@ import FriendsPage from './pages/FriendsPage';
 import CreateAPersonalProfile from './pages/CreateAPersonalProfile';
 import UpdateProfile from './pages/UpdateProfile';
 import PersonalProfile from './pages/PersonalProfile';
-import CreatePostPage from './pages/CreatePostPage';
 
 import { SocketProvider } from './context/SocketContext';
 import { AuthProvider } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
+import { PostInteractionProvider } from './context/PostInteractionContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import NavigationHeader from './components/NavigationHeader';
 
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <SocketProvider>
-          <Router>
-            <Routes>
-              <Route path="/register" element={<RegisterPage />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route
-                path="/"
-                element={
-                  <ProtectedRoute>
-                    <HomePage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route path="/update-profile" element={<UpdateProfile />} />
-              <Route
-                path="/create-profile"
-                element={<CreateAPersonalProfile />}
-              />
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <PersonalProfile />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/persona-profile/:userId?"
-                element={<PersonalProfile />}
-              />
-              <Route
-                path="/chat"
-                element={
-                  <ProtectedRoute>
-                    <ChatPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/friends"
-                element={
-                  <ProtectedRoute>
-                    <FriendsPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/create-post"
-                element={
-                  <ProtectedRoute>
-                    <CreatePostPage />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </Router>
+          <NotificationProvider>
+            <PostInteractionProvider>
+              <Router>
+                <NavigationHeader />
+                <Routes>
+                  <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route
+                    path="/"
+                    element={
+                      <ProtectedRoute>
+                        <HomePage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/update-profile" element={<UpdateProfile />} />
+                  <Route
+                    path="/create-profile"
+                    element={<CreateAPersonalProfile />}
+                  />
+                  <Route
+                    path="/profile"
+                    element={
+                      <ProtectedRoute>
+                        <PersonalProfile />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/persona-profile/:userId?"
+                    element={<PersonalProfile />}
+                  />
+                  <Route
+                    path="/chat"
+                    element={
+                      <ProtectedRoute>
+                        <ChatPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/friends"
+                    element={
+                      <ProtectedRoute>
+                        <FriendsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                </Routes>
+              </Router>
+            </PostInteractionProvider>
+          </NotificationProvider>
         </SocketProvider>
       </AuthProvider>
     </ThemeProvider>

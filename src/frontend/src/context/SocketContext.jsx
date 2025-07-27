@@ -7,6 +7,7 @@ const SocketContext = createContext(undefined);
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [friendsStatus, setFriendsStatus] = useState({}); // Track friends online status
   const { user } = useAuth();
 
   useEffect(() => {
@@ -39,10 +40,48 @@ export const SocketProvider = ({ children }) => {
         setIsConnected(false);
       });
 
+      // Listen for friend status changes
+      newSocket.on('friend_status_change', (statusData) => {
+        console.log('👥 Friend status change:', statusData);
+        setFriendsStatus((prev) => ({
+          ...prev,
+          [statusData.userId]: {
+            isOnline: statusData.isOnline,
+            lastActive: statusData.lastActive,
+          },
+        }));
+      });
+
+      // Debug: Listen for friend request events
+      newSocket.on('friend_request_received', (data) => {
+        console.log('🔍 SocketContext: friend_request_received event:', data);
+      });
+
+      newSocket.on('friend_request_accepted', (data) => {
+        console.log('🔍 SocketContext: friend_request_accepted event:', data);
+      });
+
+      newSocket.on('friend_request_declined', (data) => {
+        console.log('🔍 SocketContext: friend_request_declined event:', data);
+      });
+
+      // Test listener
+      newSocket.on('test_notification', (data) => {
+        console.log('🧪 Test notification received:', data);
+      });
+
       setSocket(newSocket);
 
       return () => {
         console.log('🔍 Cleaning up socket connection');
+        newSocket.off('friend_request_received');
+        newSocket.off('friend_request_accepted');
+        newSocket.off('friend_request_declined');
+        newSocket.off('test_notification');
+        newSocket.off('post_liked');
+        newSocket.off('post_unliked');
+        newSocket.off('comment_added');
+        newSocket.off('comment_deleted');
         newSocket.close();
         setSocket(null);
         setIsConnected(false);
@@ -58,9 +97,16 @@ export const SocketProvider = ({ children }) => {
     }
   }, [user?.id]); // Only depend on user.id, not the whole user object
 
+  // Helper function to get friend status
+  const getFriendStatus = (friendId) => {
+    return friendsStatus[friendId] || { isOnline: false, lastActive: null };
+  };
+
   const value = {
     socket,
     isConnected,
+    friendsStatus,
+    getFriendStatus,
   };
 
   return (

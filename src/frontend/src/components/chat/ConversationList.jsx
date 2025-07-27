@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { FaCircle } from 'react-icons/fa';
+import { useSocket } from '../../context/SocketContext';
 
 const ConversationList = memo(function ConversationList({
   conversations,
@@ -7,6 +8,7 @@ const ConversationList = memo(function ConversationList({
   selectedChat,
   onSelect,
 }) {
+  const { getFriendStatus } = useSocket();
   if (loading) {
     return (
       <div className="p-4">
@@ -60,8 +62,14 @@ const ConversationList = memo(function ConversationList({
 
     // For 1-on-1 chats, get the other person's name
     if (conversation.members && conversation.members.length > 0) {
+      // Backend already filtered to show only the other person
       const otherMember = conversation.members[0];
-      return otherMember.full_name || otherMember.email || 'Người dùng';
+      return (
+        otherMember.full_name ||
+        otherMember.nickname ||
+        otherMember.email ||
+        'Người dùng'
+      );
     }
 
     return 'Cuộc trò chuyện';
@@ -69,12 +77,54 @@ const ConversationList = memo(function ConversationList({
 
   const getConversationAvatar = (conversation) => {
     if (conversation.is_group) {
-      return '/group-avatar.svg';
+      // For groups, use group avatar or default
+      const avatar = conversation.avatar;
+      console.log('🔍 ConversationList - Group avatar:', {
+        conversationId: conversation.id,
+        avatar,
+        fullUrl: avatar
+          ? `http://localhost:5000${avatar}`
+          : '/group-avatar.svg',
+      });
+
+      return avatar ? `http://localhost:5000${avatar}` : '/group-avatar.svg';
     }
 
     if (conversation.members && conversation.members.length > 0) {
+      // Backend already filtered to show only the other person
       const otherMember = conversation.members[0];
-      return otherMember.avatar_url || '/demo-avatar.svg';
+      console.log('🔍 ConversationList - 1-on-1 avatar:', {
+        conversationId: conversation.id,
+        otherMember,
+        avatar_url: otherMember.avatar_url,
+        fullUrl: otherMember.avatar_url
+          ? `http://localhost:5000${otherMember.avatar_url}`
+          : '/demo-avatar.svg',
+      });
+
+      // Use avatar_url from profile, fallback to default
+      const avatar = otherMember.avatar_url;
+      if (!avatar) {
+        return '/demo-avatar.svg';
+      }
+
+      // If avatar already has full URL, use as is
+      if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
+        return avatar;
+      }
+
+      // If avatar is just filename, prepend server URL
+      if (avatar.startsWith('/uploads/')) {
+        return `http://localhost:5000${avatar}`;
+      }
+
+      // For demo avatars or other filenames
+      if (avatar === 'demo_avatar.jpg' || avatar.includes('demo')) {
+        return '/demo-avatar.svg';
+      }
+
+      // Default case: prepend server URL
+      return `http://localhost:5000/uploads/${avatar}`;
     }
 
     return '/demo-avatar.svg';
@@ -110,10 +160,24 @@ const ConversationList = memo(function ConversationList({
                 e.target.src = '/demo-avatar.svg';
               }}
             />
-            {/* Online status indicator - could be enhanced with real-time status */}
-            {!conversation.is_group && (
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
-            )}
+            {/* Real-time online status indicator */}
+            {!conversation.is_group &&
+              conversation.members &&
+              conversation.members[0] &&
+              (() => {
+                const friend = conversation.members[0];
+                const friendStatus = getFriendStatus(friend.id);
+                const isOnline = friendStatus.isOnline;
+
+                return (
+                  <div
+                    className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-white dark:border-gray-800 rounded-full ${
+                      isOnline ? 'bg-green-500' : 'bg-gray-400'
+                    }`}
+                    title={isOnline ? 'Đang hoạt động' : 'Không hoạt động'}
+                  />
+                );
+              })()}
           </div>
 
           <div className="flex-1 min-w-0">
@@ -135,8 +199,10 @@ const ConversationList = memo(function ConversationList({
 
           {/* Unread count badge */}
           {conversation.unread_count > 0 && (
-            <div className="bg-blue-600 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5">
-              {conversation.unread_count > 9 ? '9+' : conversation.unread_count}
+            <div className="bg-red-500 text-white text-xs rounded-full min-w-[20px] h-5 flex items-center justify-center px-1.5 font-medium">
+              {conversation.unread_count > 99
+                ? '99+'
+                : conversation.unread_count}
             </div>
           )}
         </div>

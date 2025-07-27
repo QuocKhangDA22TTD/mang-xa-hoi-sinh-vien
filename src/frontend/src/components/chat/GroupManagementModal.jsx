@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   FaTimes,
   FaUsers,
@@ -7,9 +7,11 @@ import {
   FaCrown,
   FaEdit,
   FaSave,
+  FaCamera,
 } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import { getFriends } from '../../api/friends';
+import { updateGroupInfo, uploadGroupAvatar } from '../../api/chat';
 
 function GroupManagementModal({
   isOpen,
@@ -27,6 +29,8 @@ function GroupManagementModal({
   const [error, setError] = useState(null);
   const [editingName, setEditingName] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef(null);
 
   const isAdmin = conversation?.admin_id === user?.id;
 
@@ -184,6 +188,42 @@ function GroupManagementModal({
     } catch (error) {
       console.error('Lỗi khi cập nhật tên nhóm:', error);
       setError(error.message);
+    }
+  };
+
+  const handleAvatarUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      setError('Chỉ được upload file ảnh');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('File ảnh không được vượt quá 5MB');
+      return;
+    }
+
+    try {
+      setUploadingAvatar(true);
+      setError(null);
+
+      await uploadGroupAvatar(conversation.id, file);
+      console.log('✅ Group avatar uploaded successfully');
+
+      onGroupUpdated?.();
+    } catch (err) {
+      console.error('❌ Error uploading group avatar:', err);
+      setError('Không thể upload avatar nhóm');
+    } finally {
+      setUploadingAvatar(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -360,7 +400,63 @@ function GroupManagementModal({
 
           {/* Settings Tab */}
           {activeTab === 'settings' && isAdmin && (
-            <div className="space-y-4">
+            <div className="space-y-6">
+              {/* Group Avatar */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Avatar nhóm
+                </label>
+                <div className="flex items-center space-x-4">
+                  <div className="relative">
+                    <img
+                      src={
+                        conversation.avatar
+                          ? `http://localhost:5000${conversation.avatar}`
+                          : '/demo-avatar.svg'
+                      }
+                      alt="Group Avatar"
+                      className="w-16 h-16 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600"
+                      onError={(e) => {
+                        console.log(
+                          '🔍 GroupManagement - Avatar load error:',
+                          e.target.src
+                        );
+                        e.target.src = '/demo-avatar.svg';
+                      }}
+                    />
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingAvatar}
+                      className="absolute -bottom-1 -right-1 p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                      title="Thay đổi avatar"
+                    >
+                      <FaCamera className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Click vào icon camera để thay đổi avatar nhóm
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                      Chỉ chấp nhận file ảnh, tối đa 5MB
+                    </p>
+                  </div>
+                </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  className="hidden"
+                />
+                {uploadingAvatar && (
+                  <p className="text-sm text-blue-600 mt-2">
+                    Đang upload avatar...
+                  </p>
+                )}
+              </div>
+
+              {/* Group Name */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Tên nhóm

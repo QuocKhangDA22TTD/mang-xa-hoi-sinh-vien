@@ -1,21 +1,28 @@
 // src/api/friends.js
 
-const API_BASE = 'http://localhost:5000/api/friends';
+const API_BASE = 'http://localhost:5000/api/friend';
 
 // Lấy danh sách bạn bè
 export async function getFriends() {
-  const res = await fetch(`${API_BASE}/friends`, {
+  // Backend: app.use('/api/friends', friendRoutes) + router.get('/friends', ...)
+  // = /api/friends/friends
+  const url = `${API_BASE}/friends`;
+  console.log('🔍 getFriends API call to:', url);
+  const res = await fetch(url, {
     credentials: 'include',
   });
 
   if (!res.ok) {
     const errorText = await res.text();
+    console.error('❌ getFriends API error:', res.status, errorText);
     throw new Error(
       `HTTP ${res.status}: ${errorText || 'Không lấy được danh sách bạn bè'}`
     );
   }
 
-  return res.json();
+  const data = await res.json();
+  console.log('✅ getFriends API response:', data);
+  return data;
 }
 
 // Gửi lời mời kết bạn

@@ -16,8 +16,14 @@ function ChatHeader({ conversation, onGroupManage }) {
     }
 
     if (conversation.members && conversation.members.length > 0) {
+      // Backend already filtered to show only the other person
       const otherMember = conversation.members[0];
-      return otherMember.full_name || otherMember.email || 'Người dùng';
+      return (
+        otherMember.full_name ||
+        otherMember.nickname ||
+        otherMember.email ||
+        'Người dùng'
+      );
     }
 
     return 'Cuộc trò chuyện';
@@ -25,12 +31,54 @@ function ChatHeader({ conversation, onGroupManage }) {
 
   const getConversationAvatar = () => {
     if (conversation.is_group) {
-      return '/group-avatar.svg';
+      // For groups, use group avatar or default
+      const avatar = conversation.avatar;
+      console.log('🔍 ChatHeader - Group avatar:', {
+        conversationId: conversation.id,
+        avatar,
+        fullUrl: avatar
+          ? `http://localhost:5000${avatar}`
+          : '/group-avatar.svg',
+      });
+
+      return avatar ? `http://localhost:5000${avatar}` : '/group-avatar.svg';
     }
 
     if (conversation.members && conversation.members.length > 0) {
+      // Backend already filtered to show only the other person
       const otherMember = conversation.members[0];
-      return otherMember.avatar_url || '/demo-avatar.svg';
+      console.log('🔍 ChatHeader - 1-on-1 avatar:', {
+        conversationId: conversation.id,
+        otherMember,
+        avatar_url: otherMember.avatar_url,
+        fullUrl: otherMember.avatar_url
+          ? `http://localhost:5000${otherMember.avatar_url}`
+          : '/demo-avatar.svg',
+      });
+
+      // Use avatar_url from profile, fallback to default
+      const avatar = otherMember.avatar_url;
+      if (!avatar) {
+        return '/demo-avatar.svg';
+      }
+
+      // If avatar already has full URL, use as is
+      if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
+        return avatar;
+      }
+
+      // If avatar is just filename, prepend server URL
+      if (avatar.startsWith('/uploads/')) {
+        return `http://localhost:5000${avatar}`;
+      }
+
+      // For demo avatars or other filenames
+      if (avatar === 'demo_avatar.jpg' || avatar.includes('demo')) {
+        return '/demo-avatar.svg';
+      }
+
+      // Default case: prepend server URL
+      return `http://localhost:5000/uploads/${avatar}`;
     }
 
     return '/demo-avatar.svg';

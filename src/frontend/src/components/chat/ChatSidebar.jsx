@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import {
   FaComments,
-  FaUserFriends,
   FaPlus,
   FaArrowLeft,
   FaSearch,
@@ -24,19 +23,46 @@ function ChatSidebar({
   onFriendSelect,
   onRefresh,
 }) {
+  // Filter conversations based on search term
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [showCreateGroupModal, setShowCreateGroupModal] = useState(false);
 
-  const filteredConversations = conversations.filter(
-    (conv) =>
-      conv.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      conv.members?.some((member) =>
-        member.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-  );
+  // Debug conversations data (only if there are issues)
+  if (conversations && conversations.some((conv) => !conv || !conv.id)) {
+    console.log('🔍 ChatSidebar - Found invalid conversations:', conversations);
+  }
 
-  const filteredFriends = friends.filter(
+  const filteredConversations = (conversations || []).filter((conv) => {
+    if (!conv) {
+      return false;
+    }
+
+    // For group conversations, search by name
+    if (conv.is_group && conv.name) {
+      if (conv.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return true;
+      }
+    }
+
+    // For all conversations, search by member names
+    if (conv.members && Array.isArray(conv.members)) {
+      return conv.members.some((member) => {
+        if (!member) return false;
+        const memberName =
+          member.full_name ||
+          member.nickname ||
+          member.username ||
+          member.email ||
+          '';
+        return memberName.toLowerCase().includes(searchTerm.toLowerCase());
+      });
+    }
+
+    return false;
+  });
+
+  const filteredFriends = (friends || []).filter(
     (friend) =>
       friend.friend_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       friend.friend_email?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -93,15 +119,15 @@ function ChatSidebar({
       {/* Tabs */}
       <div className="flex border-b border-gray-200 dark:border-gray-700">
         <button
-          onClick={() => onTabChange('conversations')}
+          onClick={() => onTabChange('groups')}
           className={`flex-1 flex items-center justify-center py-3 px-4 text-sm font-medium transition-colors ${
-            activeTab === 'conversations'
+            activeTab === 'groups'
               ? 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20'
               : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
           }`}
         >
-          <FaComments className="w-4 h-4 mr-2" />
-          Cuộc trò chuyện
+          <FaUsers className="w-4 h-4 mr-2" />
+          Nhóm chat
         </button>
         <button
           onClick={() => onTabChange('friends')}
@@ -111,28 +137,69 @@ function ChatSidebar({
               : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
           }`}
         >
-          <FaUserFriends className="w-4 h-4 mr-2" />
-          Bạn bè
+          <FaComments className="w-4 h-4 mr-2" />
+          Nhắn tin với bạn bè
         </button>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
-        {activeTab === 'conversations' ? (
-          <ConversationList
-            conversations={filteredConversations}
-            loading={loadingConversations}
-            selectedChat={selectedChat}
-            onSelect={onConversationSelect}
-          />
-        ) : (
-          <FriendsList
-            friends={filteredFriends}
-            loading={loadingFriends}
-            onSelect={onFriendSelect}
-            avatarSize="large"
-            variant="chat"
-          />
+        {activeTab === 'groups' && (
+          <div>
+            {/* Create Group Button */}
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <button
+                onClick={() => setShowCreateGroupModal(true)}
+                className="w-full flex items-center justify-center py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              >
+                <FaPlus className="w-4 h-4 mr-2" />
+                Tạo nhóm mới
+              </button>
+            </div>
+
+            {/* Groups List */}
+            <ConversationList
+              conversations={filteredConversations.filter(
+                (conv) => conv && conv.is_group
+              )}
+              loading={loadingConversations}
+              selectedChat={selectedChat}
+              onSelect={onConversationSelect}
+            />
+          </div>
+        )}
+
+        {activeTab === 'friends' && (
+          <div className="space-y-4">
+            {/* Friend Conversations */}
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 px-4 py-2">
+                Cuộc trò chuyện
+              </h3>
+              <ConversationList
+                conversations={filteredConversations.filter(
+                  (conv) => conv && !conv.is_group
+                )}
+                loading={loadingConversations}
+                selectedChat={selectedChat}
+                onSelect={onConversationSelect}
+              />
+            </div>
+
+            {/* Friends List */}
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 px-4 py-2">
+                Bạn bè
+              </h3>
+              <FriendsList
+                friends={filteredFriends}
+                loading={loadingFriends}
+                onSelect={onFriendSelect}
+                avatarSize="large"
+                variant="chat"
+              />
+            </div>
+          </div>
         )}
       </div>
 

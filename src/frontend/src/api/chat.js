@@ -162,3 +162,50 @@ export async function markMessagesAsRead(conversationId) {
 
   return res.json();
 }
+
+// Update group info (name, avatar)
+export async function updateGroupInfo(conversationId, data) {
+  console.log('🔍 API - Updating group info:', { conversationId, data });
+
+  const res = await fetch(`${API_BASE}/conversations/${conversationId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    throw new Error('Không thể cập nhật thông tin nhóm');
+  }
+
+  const result = await res.json();
+  console.log('🔍 API - Update group info response:', result);
+  return result;
+}
+
+// Upload group avatar
+export async function uploadGroupAvatar(conversationId, file) {
+  console.log('🔍 API - Uploading group avatar:', { conversationId, file });
+
+  const formData = new FormData();
+  formData.append('avatar', file);
+
+  const res = await fetch(
+    `${API_BASE}/conversations/${conversationId}/avatar`,
+    {
+      method: 'PUT',
+      credentials: 'include',
+      body: formData,
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error('Không thể upload avatar nhóm');
+  }
+
+  const result = await res.json();
+  console.log('🔍 API - Upload group avatar response:', result);
+  return result;
+}
