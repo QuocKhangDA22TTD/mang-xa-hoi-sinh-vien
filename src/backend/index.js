@@ -4,6 +4,8 @@ const http = require('http');
 const cors = require('cors');
 const path = require('path');
 const cookieParser = require('cookie-parser');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./docs/swagger');
 
 const authRoutes = require('./routes/authRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
@@ -35,6 +37,13 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Swagger Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  explorer: true,
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Social Network API Documentation'
+}));
 
 // Khởi chạy socket.io
 const io = require('socket.io')(server, {
