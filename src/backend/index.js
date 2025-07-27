@@ -22,13 +22,16 @@ const server = http.createServer(app); // dùng server http để tích hợp so
 app.use(express.json());
 app.use(cookieParser());
 
-app.use(
-  cors({
-    origin: ['https://daring-embrace-production.up.railway.app', 'http://localhost:5173'], // thay bằng domain thật
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true,
-  })
-);
+const corsOptions = {
+  origin: [
+    'https://mang-xa-hoi-sinh-vien-production.up.railway.app',
+    'http://localhost:5173'
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
