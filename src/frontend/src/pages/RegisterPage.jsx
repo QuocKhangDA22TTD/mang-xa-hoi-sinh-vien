@@ -22,6 +22,7 @@ function RegisterPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
+        credentials: 'include',
       });
 
       if (!res.ok) throw new Error('Đăng ký thất bại');
