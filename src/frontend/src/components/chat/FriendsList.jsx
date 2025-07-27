@@ -97,7 +97,7 @@ const FriendsList = memo(function FriendsList({
       !avatarUrl.startsWith('/')
     ) {
       // If it's a filename, prepend the uploads path
-      avatarUrl = `http://localhost:5000/uploads/${avatarUrl}`;
+      avatarUrl = `https://daring-embrace-production.up.railway.app/uploads/${avatarUrl}`;
     }
 
     return {

@@ -46,7 +46,7 @@ function GroupManagementModal({
     try {
       setLoading(true);
       const response = await fetch(
-        `http://localhost:5000/api/chat/conversations/${conversation.id}/members`,
+        `https://daring-embrace-production.up.railway.app/api/chat/conversations/${conversation.id}/members`,
         {
           credentials: 'include',
         }
@@ -109,7 +109,7 @@ function GroupManagementModal({
       console.log('🔍 Request body:', requestBody);
 
       const response = await fetch(
-        `http://localhost:5000/api/chat/conversations/${conversation.id}/members`,
+        `https://daring-embrace-production.up.railway.app/api/chat/conversations/${conversation.id}/members`,
         {
           method: 'POST',
           headers: {
@@ -139,7 +139,7 @@ function GroupManagementModal({
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/chat/conversations/${conversation.id}/members/${memberId}`,
+        `https://daring-embrace-production.up.railway.app/api/chat/conversations/${conversation.id}/members/${memberId}`,
         {
           method: 'DELETE',
           credentials: 'include',
@@ -167,7 +167,7 @@ function GroupManagementModal({
 
     try {
       const response = await fetch(
-        `http://localhost:5000/api/chat/conversations/${conversation.id}`,
+        `https://daring-embrace-production.up.railway.app/api/chat/conversations/${conversation.id}`,
         {
           method: 'PUT',
           headers: {
@@ -411,7 +411,7 @@ function GroupManagementModal({
                     <img
                       src={
                         conversation.avatar
-                          ? `http://localhost:5000${conversation.avatar}`
+                          ? `https://daring-embrace-production.up.railway.app${conversation.avatar}`
                           : '/demo-avatar.svg'
                       }
                       alt="Group Avatar"

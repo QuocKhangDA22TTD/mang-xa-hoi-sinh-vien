@@ -21,7 +21,7 @@ function HomePage() {
         setUser(userData);
 
         const res = await fetch(
-          `http://localhost:5000/api/profile/${userData.id}`,
+          `https://daring-embrace-production.up.railway.app/api/profile/${userData.id}`,
           {
             method: 'GET',
             headers: {

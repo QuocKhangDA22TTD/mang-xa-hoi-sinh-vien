@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:5000/api/posts';
+const API_BASE = 'https://daring-embrace-production.up.railway.app/api/posts';
 
 // Get post interactions (likes and comments)
 export async function getPostInteractions(postId) {

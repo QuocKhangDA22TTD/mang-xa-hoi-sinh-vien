@@ -1,6 +1,6 @@
 // src/api/chat.js
 
-const API_BASE = 'http://localhost:5000/api/chat';
+const API_BASE = 'https://daring-embrace-production.up.railway.app/api/chat';
 
 // Lấy danh sách cuộc trò chuyện của user hiện tại
 export async function getMyConversations() {

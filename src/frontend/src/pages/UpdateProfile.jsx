@@ -31,7 +31,7 @@ function UpdateProfile() {
         const currentUser = await getMe();
 
         const response = await fetch(
-          `http://localhost:5000/api/profile/${currentUser.id}`,
+          `https://daring-embrace-production.up.railway.app/api/profile/${currentUser.id}`,
           {
             method: 'GET',
             headers: {
@@ -102,7 +102,7 @@ function UpdateProfile() {
     formData.append(type, file);
 
     const response = await fetch(
-      `http://localhost:5000/api/profile/upload/${type}`,
+      `https://daring-embrace-production.up.railway.app/api/profile/upload/${type}`,
       {
         method: 'POST',
         body: formData,
@@ -146,7 +146,7 @@ function UpdateProfile() {
       }
 
       // Cập nhật profile
-      const response = await fetch('http://localhost:5000/api/profile', {
+      const response = await fetch('https://daring-embrace-production.up.railway.app/api/profile', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
