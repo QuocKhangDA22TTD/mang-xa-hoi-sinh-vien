@@ -1,15 +1,18 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { 
-  FaUserPlus, 
-  FaUserFriends, 
-  FaInbox, 
-  FaPaperPlane, 
+import { useTheme } from '../contexts/ThemeContext';
+import { useNotification } from '../context/NotificationContext';
+import { useSocket } from '../context/SocketContext';
+import {
+  FaUserPlus,
+  FaUserFriends,
+  FaInbox,
+  FaPaperPlane,
   FaSearch,
   FaCheck,
   FaTimes,
   FaUserMinus,
-  FaSpinner
+  FaSpinner,
 } from 'react-icons/fa';
 import {
   getAllUsers,
@@ -19,11 +22,14 @@ import {
   getFriends,
   acceptFriendRequest,
   declineFriendRequest,
-  unfriend
+  unfriend,
 } from '../api/friends';
 
 function FriendsPage() {
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
+  const { addNotification } = useNotification();
+  const { socket, getFriendStatus } = useSocket();
   const [activeTab, setActiveTab] = useState('find'); // find, friends, received, sent
   const [users, setUsers] = useState([]);
   const [friends, setFriends] = useState([]);
@@ -109,54 +115,93 @@ function FriendsPage() {
   };
 
   const handleSendRequest = async (userId) => {
-    setActionLoading(prev => ({ ...prev, [`send_${userId}`]: true }));
+    setActionLoading((prev) => ({ ...prev, [`send_${userId}`]: true }));
     try {
       await sendFriendRequest(userId);
       await loadUsers(); // Refresh list
     } catch (error) {
       alert(error.message);
     } finally {
-      setActionLoading(prev => ({ ...prev, [`send_${userId}`]: false }));
+      setActionLoading((prev) => ({ ...prev, [`send_${userId}`]: false }));
     }
   };
 
   const handleAcceptRequest = async (requestId) => {
-    setActionLoading(prev => ({ ...prev, [`accept_${requestId}`]: true }));
+    setActionLoading((prev) => ({ ...prev, [`accept_${requestId}`]: true }));
     try {
       await acceptFriendRequest(requestId);
       await loadReceivedRequests(); // Refresh list
     } catch (error) {
       alert(error.message);
     } finally {
-      setActionLoading(prev => ({ ...prev, [`accept_${requestId}`]: false }));
+      setActionLoading((prev) => ({ ...prev, [`accept_${requestId}`]: false }));
     }
   };
 
   const handleDeclineRequest = async (requestId) => {
-    setActionLoading(prev => ({ ...prev, [`decline_${requestId}`]: true }));
+    setActionLoading((prev) => ({ ...prev, [`decline_${requestId}`]: true }));
     try {
       await declineFriendRequest(requestId);
       await loadReceivedRequests(); // Refresh list
     } catch (error) {
       alert(error.message);
     } finally {
-      setActionLoading(prev => ({ ...prev, [`decline_${requestId}`]: false }));
+      setActionLoading((prev) => ({
+        ...prev,
+        [`decline_${requestId}`]: false,
+      }));
     }
   };
 
   const handleUnfriend = async (friendId) => {
     if (!confirm('Bạn có chắc muốn hủy kết bạn?')) return;
-    
-    setActionLoading(prev => ({ ...prev, [`unfriend_${friendId}`]: true }));
+
+    setActionLoading((prev) => ({ ...prev, [`unfriend_${friendId}`]: true }));
     try {
       await unfriend(friendId);
       await loadFriends(); // Refresh list
     } catch (error) {
       alert(error.message);
     } finally {
-      setActionLoading(prev => ({ ...prev, [`unfriend_${friendId}`]: false }));
+      setActionLoading((prev) => ({
+        ...prev,
+        [`unfriend_${friendId}`]: false,
+      }));
     }
   };
+
+  // Socket listeners for real-time data refresh (notifications handled by NotificationContext)
+  useEffect(() => {
+    if (!socket || !user) return;
+
+    // Listen for new friend requests to refresh data
+    socket.on('friend_request_received', (data) => {
+      console.log('📨 FriendsPage: Friend request received, refreshing data');
+      // Only reload data, notification is handled by NotificationContext
+      loadReceivedRequests();
+    });
+
+    // Listen for friend request accepted to refresh data
+    socket.on('friend_request_accepted', (data) => {
+      console.log('✅ FriendsPage: Friend request accepted, refreshing data');
+      // Only reload data, notification is handled by NotificationContext
+      loadFriends();
+      loadSentRequests();
+    });
+
+    // Listen for friend request declined to refresh data
+    socket.on('friend_request_declined', (data) => {
+      console.log('❌ FriendsPage: Friend request declined, refreshing data');
+      // Only reload data, notification is handled by NotificationContext
+      loadSentRequests();
+    });
+
+    return () => {
+      socket.off('friend_request_received');
+      socket.off('friend_request_accepted');
+      socket.off('friend_request_declined');
+    };
+  }, [socket, user]);
 
   const tabs = [
     { id: 'find', label: 'Tìm bạn', icon: FaUserPlus },
@@ -166,20 +211,78 @@ function FriendsPage() {
   ];
 
   const renderUserCard = (user, showActions = true) => (
-    <div key={user.id} className="bg-white rounded-lg p-4 shadow-sm border">
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
       <div className="flex items-center space-x-3">
-        <img
-          src={user.friend_avatar || user.receiver_avatar || user.sender_avatar || user.avatar_url || 'demo_avatar.jpg'}
-          alt={user.friend_name || user.receiver_name || user.sender_name || user.full_name || 'User'}
-          className="w-12 h-12 rounded-full object-cover"
-        />
+        <div className="relative">
+          <img
+            src={
+              user.friend_avatar ||
+              user.receiver_avatar ||
+              user.sender_avatar ||
+              user.avatar_url ||
+              'demo_avatar.jpg'
+            }
+            alt={
+              user.friend_name ||
+              user.receiver_name ||
+              user.sender_name ||
+              user.full_name ||
+              'User'
+            }
+            className="w-12 h-12 rounded-full object-cover"
+            onError={(e) => {
+              e.target.src = '/demo-avatar.svg';
+            }}
+          />
+          {/* Real-time online status indicator */}
+          {(() => {
+            const userId =
+              user.id || user.friend_id || user.sender_id || user.receiver_id;
+            if (!userId) return null;
+
+            const friendStatus = getFriendStatus(userId);
+            const isOnline = friendStatus.isOnline;
+
+            return (
+              isOnline && (
+                <div
+                  className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"
+                  title="Đang hoạt động"
+                />
+              )
+            );
+          })()}
+        </div>
         <div className="flex-1">
-          <h3 className="font-semibold text-gray-800">
-            {user.friend_name || user.receiver_name || user.sender_name || user.full_name || user.friend_email || user.receiver_email || user.sender_email || user.email}
+          <h3 className="font-semibold text-gray-800 dark:text-white">
+            {user.friend_name ||
+              user.receiver_name ||
+              user.sender_name ||
+              user.full_name ||
+              user.friend_email ||
+              user.receiver_email ||
+              user.sender_email ||
+              user.email}
           </h3>
-          <p className="text-sm text-gray-600">
-            {user.friend_email || user.receiver_email || user.sender_email || user.email}
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            {user.friend_email ||
+              user.receiver_email ||
+              user.sender_email ||
+              user.email}
           </p>
+          {/* Real-time status text */}
+          {(() => {
+            const userId =
+              user.id || user.friend_id || user.sender_id || user.receiver_id;
+            if (!userId) return null;
+
+            const friendStatus = getFriendStatus(userId);
+            return (
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {friendStatus.isOnline ? '🟢 Đang hoạt động' : '⚫ Vắng mặt'}
+              </p>
+            );
+          })()}
         </div>
         {showActions && renderActions(user)}
       </div>
@@ -187,8 +290,9 @@ function FriendsPage() {
   );
 
   const renderActions = (user) => {
-    const userId = user.id || user.friend_id || user.receiver_id || user.sender_id;
-    
+    const userId =
+      user.id || user.friend_id || user.receiver_id || user.sender_id;
+
     if (activeTab === 'find') {
       if (user.friendship_status === 'friend') {
         return <span className="text-green-600 text-sm">Đã là bạn</span>;
@@ -220,14 +324,22 @@ function FriendsPage() {
             disabled={actionLoading[`accept_${user.id}`]}
             className="bg-green-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-700 disabled:opacity-50"
           >
-            {actionLoading[`accept_${user.id}`] ? <FaSpinner className="animate-spin" /> : <FaCheck />}
+            {actionLoading[`accept_${user.id}`] ? (
+              <FaSpinner className="animate-spin" />
+            ) : (
+              <FaCheck />
+            )}
           </button>
           <button
             onClick={() => handleDeclineRequest(user.id)}
             disabled={actionLoading[`decline_${user.id}`]}
             className="bg-red-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-700 disabled:opacity-50"
           >
-            {actionLoading[`decline_${user.id}`] ? <FaSpinner className="animate-spin" /> : <FaTimes />}
+            {actionLoading[`decline_${user.id}`] ? (
+              <FaSpinner className="animate-spin" />
+            ) : (
+              <FaTimes />
+            )}
           </button>
         </div>
       );
@@ -257,21 +369,34 @@ function FriendsPage() {
 
   const getCurrentData = () => {
     switch (activeTab) {
-      case 'find': return users;
-      case 'friends': return friends;
-      case 'received': return receivedRequests;
-      case 'sent': return sentRequests;
-      default: return [];
+      case 'find':
+        return users;
+      case 'friends':
+        return friends;
+      case 'received':
+        return receivedRequests;
+      case 'sent':
+        return sentRequests;
+      default:
+        return [];
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FFFFFF] to-[#00A6FB] p-4">
+    <div
+      className={`min-h-screen p-4 ${
+        isDarkMode
+          ? 'bg-gradient-to-b from-gray-900 to-gray-800'
+          : 'bg-gradient-to-b from-[#FFFFFF] to-[#00A6FB]'
+      }`}
+    >
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">Quản lý bạn bè</h1>
-          
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6 border border-gray-200 dark:border-gray-700">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
+            Quản lý bạn bè
+          </h1>
+
           {/* Tabs */}
           <div className="flex space-x-1 bg-gray-100 rounded-lg p-1">
             {tabs.map((tab) => {
@@ -296,26 +421,26 @@ function FriendsPage() {
 
         {/* Search (chỉ hiện ở tab tìm bạn) */}
         {activeTab === 'find' && (
-          <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-gray-200 dark:border-gray-700">
             <div className="relative">
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
               <input
                 type="text"
                 placeholder="Tìm kiếm theo tên hoặc email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0582CA]"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0582CA] bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               />
             </div>
           </div>
         )}
 
         {/* Content */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
           {loading ? (
             <div className="flex justify-center items-center py-8">
               <FaSpinner className="animate-spin text-[#0582CA] text-2xl mr-2" />
-              <span>Đang tải...</span>
+              <span className="text-gray-900 dark:text-white">Đang tải...</span>
             </div>
           ) : getCurrentData().length === 0 ? (
             <div className="text-center py-8 text-gray-500">
@@ -328,7 +453,11 @@ function FriendsPage() {
             </div>
           ) : (
             <div className="grid gap-4">
-              {getCurrentData().map((item) => renderUserCard(item))}
+              {getCurrentData().map((item) => (
+                <div key={item.id || item.friend_id || item.sender_id}>
+                  {renderUserCard(item)}
+                </div>
+              ))}
             </div>
           )}
         </div>

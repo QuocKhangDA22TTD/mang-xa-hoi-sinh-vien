@@ -1,20 +1,34 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import '../styles/quill-custom.css';
 import EmojiPicker from 'emoji-picker-react';
 import PostTitle from '../features/post/PostTitle';
 import Avatar from '../features/post/Avatar';
 import Button from '../components/Button';
 import useUserProfile from '../hooks/useUserProfile';
+import { useTheme } from '../contexts/ThemeContext';
+import {
+  FaArrowLeft,
+  FaImage,
+  FaSmile,
+  FaLink,
+  FaPaperPlane,
+  FaTimes,
+} from 'react-icons/fa';
 
 function CreatePostPage() {
   const [value, setValue] = useState('');
   const [title, setTitle] = useState('');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const { user, profile, loading } = useUserProfile();
+  const { isDark } = useTheme();
+  const navigate = useNavigate();
 
   const quillRef = useRef();
   const fileInputRef = useRef();
+  const emojiPickerRef = useRef();
 
   const handleSubmitPost = async () => {
     const postData = {
@@ -39,6 +53,11 @@ function CreatePostPage() {
       alert('Đăng bài thành công');
       setTitle('');
       setValue('');
+      // Quay về trang chủ sau khi đăng bài thành công với timestamp để force refresh
+      navigate('/', {
+        replace: true,
+        state: { refresh: Date.now() },
+      });
     } catch (err) {
       console.error(err);
       alert('Lỗi khi đăng bài');
@@ -92,6 +111,43 @@ function CreatePostPage() {
 
   const toggleEmojiPicker = () => setShowEmojiPicker(!showEmojiPicker);
 
+  // Hàm xử lý khi muốn rời khỏi trang
+  const handleCancel = () => {
+    if (title.trim() || value.trim()) {
+      if (window.confirm('Bạn có chắc muốn hủy? Nội dung sẽ bị mất.')) {
+        navigate('/', {
+          replace: true,
+          state: { refresh: Date.now() },
+        });
+      }
+    } else {
+      navigate('/', {
+        replace: true,
+        state: { refresh: Date.now() },
+      });
+    }
+  };
+
+  // Đóng emoji picker khi click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        emojiPickerRef.current &&
+        !emojiPickerRef.current.contains(event.target)
+      ) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    if (showEmojiPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+
   // Tùy chỉnh toolbar: chỉ giữ các chức năng cơ bản
   const modules = {
     toolbar: [
@@ -101,67 +157,149 @@ function CreatePostPage() {
     ],
   };
 
-  if (loading) return <p>Đang tải dữ liệu...</p>;
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-gray-600 dark:text-gray-300">
+          Đang tải dữ liệu...
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-[100%] h-[100%] bg-gradient-to-b from-[#FFFFFF] to-[#00A6FB]">
-      <div className="flex gap-x-4 justify-center items-center w-full h-[20%] bg-[#0582CA]">
-        <Avatar avatarUrl={profile.avatar_url} />
-        <PostTitle title={title} setTitle={setTitle} />
-      </div>
-
-      <div className="flex justify-center items-center w-full h-[60%]">
-        <div className="p-2 w-[95%] h-[90%] bg-[#EEEBD3] rounded-[10px] overflow-auto shadow-[0_0_2px_2px_rgba(0,0,0,0.25)]">
-          <ReactQuill
-            ref={quillRef}
-            value={value}
-            onChange={setValue}
-            modules={modules}
-            className="h-[85%]"
-          />
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors">
+      {/* Header */}
+      <div className="sticky top-0 z-40 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md border-b border-gray-200 dark:border-gray-700 shadow-sm transition-colors">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={handleCancel}
+                className="p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+              >
+                <FaArrowLeft className="w-5 h-5" />
+              </button>
+              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Tạo bài viết mới
+              </h1>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="flex gap-x-4 items-center w-full h-[20%] bg-[#EEEBD3]">
-        <input
-          type="file"
-          accept="image/*"
-          ref={fileInputRef}
-          onChange={handleImageUpload}
-          className="hidden"
-        />
-
-        <Button
-          onClick={triggerFileInput}
-          className="mx-4 w-[10rem] h-[4rem] text-[1.25rem] bg-[#A98743] rounded-[10px] text-white"
-        >
-          TẢI ẢNH
-        </Button>
-        <Button
-          onClick={toggleEmojiPicker}
-          className="mx-4 w-[10rem] h-[4rem] text-[1.25rem] bg-[#A28497] rounded-[10px] text-white"
-        >
-          EMOJI
-        </Button>
-
-        {showEmojiPicker && (
-          <div className="absolute bottom-[6rem] left-[2rem] z-50">
-            <EmojiPicker onEmojiClick={onEmojiClick} />
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="space-y-6">
+          {/* Author Info & Title */}
+          <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 p-6 transition-colors">
+            <div className="flex items-center space-x-4 mb-6">
+              <Avatar avatarUrl={profile.avatar_url} />
+              <div className="flex-1">
+                <h3 className="font-semibold text-gray-900 dark:text-white">
+                  {profile.full_name || user?.email}
+                </h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Chia sẻ suy nghĩ của bạn...
+                </p>
+              </div>
+            </div>
+            <PostTitle title={title} setTitle={setTitle} />
           </div>
-        )}
 
-        <Button
-          onClick={insertLink}
-          className="mx-4 w-[10rem] h-[4rem] text-[1.25rem] bg-[#006494] rounded-[10px] text-white"
-        >
-          LINK
-        </Button>
-        <Button
-          onClick={handleSubmitPost}
-          className="ml-auto mx-4 w-[10rem] h-[4rem] text-[1.25rem] bg-[#00A6FB] rounded-[10px] text-white"
-        >
-          ĐĂNG BÀI
-        </Button>
+          {/* Content Editor */}
+          <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 transition-colors overflow-hidden">
+            <div className="p-6">
+              <div className="min-h-[400px]">
+                <ReactQuill
+                  ref={quillRef}
+                  value={value}
+                  onChange={setValue}
+                  modules={modules}
+                  placeholder="Bạn đang nghĩ gì?"
+                  className="h-[350px]"
+                  theme="snow"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-2xl shadow-md border border-gray-200 dark:border-gray-700 p-6 transition-colors">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+
+                <Button
+                  onClick={triggerFileInput}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-50 hover:bg-blue-100 dark:bg-blue-900/50 dark:hover:bg-blue-900/70 text-blue-600 dark:text-blue-400 rounded-xl transition-colors"
+                >
+                  <FaImage className="w-4 h-4" />
+                  <span className="font-medium">Ảnh</span>
+                </Button>
+
+                <Button
+                  onClick={toggleEmojiPicker}
+                  className="flex items-center space-x-2 px-4 py-2 bg-yellow-50 hover:bg-yellow-100 dark:bg-yellow-900/50 dark:hover:bg-yellow-900/70 text-yellow-600 dark:text-yellow-400 rounded-xl transition-colors"
+                >
+                  <FaSmile className="w-4 h-4" />
+                  <span className="font-medium">Emoji</span>
+                </Button>
+
+                <Button
+                  onClick={insertLink}
+                  className="flex items-center space-x-2 px-4 py-2 bg-green-50 hover:bg-green-100 dark:bg-green-900/50 dark:hover:bg-green-900/70 text-green-600 dark:text-green-400 rounded-xl transition-colors"
+                >
+                  <FaLink className="w-4 h-4" />
+                  <span className="font-medium">Liên kết</span>
+                </Button>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <Button
+                  onClick={handleCancel}
+                  className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl transition-colors font-medium"
+                >
+                  <span>Hủy</span>
+                </Button>
+                <Button
+                  onClick={handleSubmitPost}
+                  className="flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 font-medium"
+                >
+                  <FaPaperPlane className="w-4 h-4" />
+                  <span>Đăng bài</span>
+                </Button>
+              </div>
+            </div>
+
+            {/* Emoji Picker */}
+            {showEmojiPicker && (
+              <div
+                ref={emojiPickerRef}
+                className="absolute bottom-20 left-6 z-50 shadow-2xl rounded-2xl overflow-hidden"
+              >
+                <div className="relative">
+                  <button
+                    onClick={() => setShowEmojiPicker(false)}
+                    className="absolute top-2 right-2 z-10 p-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-colors"
+                  >
+                    <FaTimes className="w-3 h-3 text-gray-600 dark:text-gray-300" />
+                  </button>
+                  <EmojiPicker
+                    onEmojiClick={onEmojiClick}
+                    theme={isDark ? 'dark' : 'light'}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -1,11 +1,5 @@
 import React, { useEffect } from 'react';
-export const Modal = ({
-  isOpen,
-  onClose,
-  title,
-  children,
-  className = '',
-}) => {
+export const Modal = ({ isOpen, onClose, title, children, className = '' }) => {
   // Xử lý khi nhấn phím Escape
   useEffect(() => {
     const handleEsc = (e) => {
