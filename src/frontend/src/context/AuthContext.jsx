@@ -23,7 +23,7 @@ export function AuthProvider({ children }) {
     const heartbeatInterval = setInterval(
       () => {
         if (!document.hidden) {
-          fetch('/api/auth/heartbeat', {
+          fetch('http://localhost:5000/api/auth/heartbeat', {
             method: 'POST',
             credentials: 'include',
           }).catch(console.error);

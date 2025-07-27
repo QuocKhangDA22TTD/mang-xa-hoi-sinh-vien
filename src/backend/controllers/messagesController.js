@@ -157,16 +157,54 @@ exports.markMessagesAsRead = async (req, res) => {
   const { conversation_id } = req.body;
   const user_id = req.user.id;
 
+  console.log('🔍 markMessagesAsRead called:', { conversation_id, user_id });
+
   try {
-    // For now, just return success since message_reads table doesn't exist
-    // TODO: Implement proper read tracking when message_reads table is created
+    // Get all unread messages in this conversation for this user
+    const [unreadMessages] = await db.execute(
+      `SELECT m.id
+       FROM messages m
+       WHERE m.conversation_id = ?
+       AND m.sender_id != ?
+       AND m.id NOT IN (
+         SELECT message_id FROM message_reads WHERE user_id = ?
+       )`,
+      [conversation_id, user_id, user_id]
+    );
+
+    console.log('🔍 Found unread messages:', unreadMessages.length);
+
+    if (unreadMessages.length > 0) {
+      // Insert read records for all unread messages
+      const values = unreadMessages.map((msg) => [msg.id, user_id]);
+      const placeholders = values.map(() => '(?, ?)').join(', ');
+      const flatValues = values.flat();
+
+      await db.execute(
+        `INSERT INTO message_reads (message_id, user_id) VALUES ${placeholders}`,
+        flatValues
+      );
+
+      console.log(`✅ Marked ${unreadMessages.length} messages as read`);
+    }
 
     res.json({
       message: 'Messages marked as read',
-      count: 0,
+      count: unreadMessages.length,
     });
+
+    // Emit socket event to update unread count for other clients
+    if (req.io && unreadMessages.length > 0) {
+      req.io.emit('messages_marked_read', {
+        conversation_id,
+        user_id,
+        count: unreadMessages.length,
+      });
+    }
   } catch (err) {
     console.error('❌ Error marking messages as read:', err);
-    res.status(500).json({ message: 'Lỗi đánh dấu tin nhắn đã đọc' });
+    res
+      .status(500)
+      .json({ message: 'Lỗi đánh dấu tin nhắn đã đọc', error: err.message });
   }
 };

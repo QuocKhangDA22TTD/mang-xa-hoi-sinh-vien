@@ -131,15 +131,49 @@ exports.createConversation = async (req, res) => {
       [conversationId]
     );
 
+    // Get member details
+    const memberIds = conversation[0].member_ids
+      ? conversation[0].member_ids.split(',').map(Number)
+      : [];
+
+    let members = [];
+    if (memberIds.length > 0) {
+      const [memberDetails] = await db.execute(
+        `SELECT u.id, u.email, u.is_online, u.last_active,
+                p.full_name, p.nickname, p.avatar_url
+         FROM users u
+         LEFT JOIN profile p ON u.id = p.user_id
+         WHERE u.id IN (${memberIds.map(() => '?').join(',')})`,
+        memberIds
+      );
+
+      // For 1-on-1 conversations, only show the other person's info
+      if (!is_group && memberDetails.length > 1) {
+        // Filter out current user (admin_id), only show the other person
+        members = memberDetails.filter((member) => member.id !== admin_id);
+        console.log(
+          `🔍 createConversation - Filtered members (excluding user ${admin_id}):`,
+          members
+        );
+      } else {
+        members = memberDetails;
+        console.log(`🔍 createConversation - All members:`, members);
+      }
+    }
+
     const conversationObject = {
       id: conversation[0].id,
       is_group: conversation[0].is_group,
       name: conversation[0].name,
       admin_id: conversation[0].admin_id,
       created_at: conversation[0].created_at,
-      member_ids: conversation[0].member_ids
-        ? conversation[0].member_ids.split(',').map(Number)
-        : [],
+      avatar: conversation[0].avatar,
+      member_ids: memberIds,
+      members: members,
+      message_count: 0,
+      last_message: null,
+      last_message_time: null,
+      unread_count: 0,
     };
 
     console.log('🔍 Returning conversation object:', conversationObject);
@@ -160,6 +194,7 @@ exports.createConversation = async (req, res) => {
 exports.getMyConversations = async (req, res) => {
   const userId = req.user.id;
   console.log('🔍 getMyConversations called for user:', userId);
+  console.log('🔍 User object:', req.user);
 
   try {
     // First, let's see all conversation_members for this user
@@ -170,9 +205,17 @@ exports.getMyConversations = async (req, res) => {
     console.log('🔍 User is member of conversations:', memberCheck);
 
     const [conversations] = await db.execute(
-      `SELECT DISTINCT c.id, c.is_group, c.name, c.admin_id, c.created_at,
+      `SELECT DISTINCT c.id, c.is_group, c.name, c.admin_id, c.created_at, c.avatar,
               GROUP_CONCAT(DISTINCT cm.user_id ORDER BY cm.user_id) as member_ids,
-              (SELECT COUNT(*) FROM messages m WHERE m.conversation_id = c.id) as message_count
+              (SELECT COUNT(*) FROM messages m WHERE m.conversation_id = c.id) as message_count,
+              (SELECT text FROM messages m WHERE m.conversation_id = c.id ORDER BY m.sent_at DESC LIMIT 1) as last_message,
+              (SELECT sent_at FROM messages m WHERE m.conversation_id = c.id ORDER BY m.sent_at DESC LIMIT 1) as last_message_time,
+              (SELECT COUNT(*) FROM messages m
+               WHERE m.conversation_id = c.id
+               AND m.sender_id != ?
+               AND m.id NOT IN (
+                 SELECT message_id FROM message_reads mr WHERE mr.user_id = ?
+               )) as unread_count
        FROM conversations c
        JOIN conversation_members cm ON c.id = cm.conversation_id
        WHERE c.id IN (
@@ -180,27 +223,85 @@ exports.getMyConversations = async (req, res) => {
          FROM conversation_members
          WHERE user_id = ?
        )
-       GROUP BY c.id, c.is_group, c.name, c.admin_id, c.created_at
-       ORDER BY c.created_at DESC`,
-      [userId]
+       GROUP BY c.id, c.is_group, c.name, c.admin_id, c.created_at, c.avatar
+       ORDER BY (SELECT sent_at FROM messages m WHERE m.conversation_id = c.id ORDER BY m.sent_at DESC LIMIT 1) DESC, c.created_at DESC`,
+      [userId, userId, userId]
     );
 
     console.log('🔍 Raw conversations from DB:', conversations);
+    console.log('🔍 Number of conversations found:', conversations.length);
 
     // Transform the data
-    const transformedConversations = conversations.map((conv) => ({
-      id: conv.id,
-      is_group: conv.is_group,
-      name: conv.name,
-      admin_id: conv.admin_id,
-      created_at: conv.created_at,
-      member_ids: conv.member_ids ? conv.member_ids.split(',').map(Number) : [],
-      message_count: conv.message_count,
-    }));
+    const transformedConversations = conversations
+      .filter((conv) => conv && conv.id) // Filter out null/undefined conversations
+      .map((conv) => ({
+        id: conv.id,
+        is_group: conv.is_group,
+        name: conv.name,
+        admin_id: conv.admin_id,
+        created_at: conv.created_at,
+        avatar: conv.avatar,
+        member_ids: conv.member_ids
+          ? conv.member_ids.split(',').map(Number)
+          : [],
+        message_count: conv.message_count,
+        last_message: conv.last_message,
+        last_message_time: conv.last_message_time,
+        unread_count: conv.unread_count || 0,
+      }));
 
-    console.log('🔍 Transformed conversations:', transformedConversations);
+    // Add member details for each conversation
+    const conversationsWithMembers = await Promise.all(
+      transformedConversations.map(async (conv) => {
+        if (conv.member_ids && conv.member_ids.length > 0) {
+          try {
+            const [memberDetails] = await db.execute(
+              `SELECT u.id, u.email, u.is_online, u.last_active,
+                      p.full_name, p.nickname, p.avatar_url
+               FROM users u
+               LEFT JOIN profile p ON u.id = p.user_id
+               WHERE u.id IN (${conv.member_ids.map(() => '?').join(',')})`,
+              conv.member_ids
+            );
 
-    res.json(transformedConversations);
+            // For 1-on-1 conversations, only show the other person's info
+            let filteredMembers = memberDetails || [];
+            if (!conv.is_group && filteredMembers.length > 1) {
+              // Filter out current user, only show the other person
+              filteredMembers = filteredMembers.filter(
+                (member) => member.id !== userId
+              );
+            }
+
+            console.log(`🔍 Conv ${conv.id} member_ids:`, conv.member_ids);
+            console.log(`🔍 Conv ${conv.id} all members:`, memberDetails);
+            console.log(
+              `🔍 Conv ${conv.id} filtered members (excluding user ${userId}):`,
+              filteredMembers
+            );
+
+            return {
+              ...conv,
+              members: filteredMembers,
+            };
+          } catch (memberError) {
+            console.error('❌ Error fetching member details:', memberError);
+            return {
+              ...conv,
+              members: [],
+            };
+          }
+        }
+        return {
+          ...conv,
+          members: [],
+        };
+      })
+    );
+
+    console.log('🔍 Conversations with members:', conversationsWithMembers);
+
+    res.json(conversationsWithMembers);
   } catch (err) {
     console.error('❌ Error getting conversations:', err);
     res.status(500).json({ message: 'Lỗi lấy danh sách hội thoại' });
@@ -377,11 +478,22 @@ exports.getGroupMembers = async (req, res) => {
   }
 };
 
-// Update group info (name, etc.)
+// Update group info (name, avatar, etc.)
 exports.updateGroupInfo = async (req, res) => {
   const { conversationId } = req.params;
-  const { name } = req.body;
+  const { name, avatar } = req.body;
   const adminId = req.user.id;
+
+  // Handle file upload for avatar
+  const uploadedAvatar = req.file ? `/uploads/${req.file.filename}` : avatar;
+
+  console.log('🔍 updateGroupInfo called:', {
+    conversationId,
+    name,
+    avatar: uploadedAvatar,
+    adminId,
+    hasFile: !!req.file,
+  });
 
   try {
     // Check if conversation exists and user is admin
@@ -400,15 +512,42 @@ exports.updateGroupInfo = async (req, res) => {
         .json({ message: 'Chỉ admin mới có thể sửa thông tin nhóm' });
     }
 
-    // Update group name
-    await db.execute('UPDATE conversations SET name = ? WHERE id = ?', [
-      name,
-      conversationId,
-    ]);
+    // Build update query dynamically
+    const updates = [];
+    const values = [];
 
-    res.json({ message: 'Cập nhật thông tin nhóm thành công' });
+    if (name !== undefined && name !== null) {
+      updates.push('name = ?');
+      values.push(name);
+    }
+
+    if (uploadedAvatar !== undefined) {
+      updates.push('avatar = ?');
+      values.push(uploadedAvatar);
+    }
+
+    if (updates.length === 0) {
+      return res
+        .status(400)
+        .json({ message: 'Không có thông tin nào để cập nhật' });
+    }
+
+    values.push(conversationId);
+
+    // Update group info
+    await db.execute(
+      `UPDATE conversations SET ${updates.join(', ')} WHERE id = ?`,
+      values
+    );
+
+    console.log('✅ Group info updated successfully');
+
+    res.json({
+      message: 'Cập nhật thông tin nhóm thành công',
+      updated: { name, avatar: uploadedAvatar },
+    });
   } catch (error) {
     console.error('❌ Error updating group info:', error);
-    res.status(500).json({ message: 'Lỗi server' });
+    res.status(500).json({ message: 'Lỗi server', error: error.message });
   }
 };

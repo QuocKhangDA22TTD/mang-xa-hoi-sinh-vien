@@ -1,5 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
+import { useNotification } from '../context/NotificationContext';
+import { useSocket } from '../context/SocketContext';
 import {
   FaUserPlus,
   FaUserFriends,
@@ -24,6 +27,9 @@ import {
 
 function FriendsPage() {
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
+  const { addNotification } = useNotification();
+  const { socket, getFriendStatus } = useSocket();
   const [activeTab, setActiveTab] = useState('find'); // find, friends, received, sent
   const [users, setUsers] = useState([]);
   const [friends, setFriends] = useState([]);
@@ -164,6 +170,39 @@ function FriendsPage() {
     }
   };
 
+  // Socket listeners for real-time data refresh (notifications handled by NotificationContext)
+  useEffect(() => {
+    if (!socket || !user) return;
+
+    // Listen for new friend requests to refresh data
+    socket.on('friend_request_received', (data) => {
+      console.log('📨 FriendsPage: Friend request received, refreshing data');
+      // Only reload data, notification is handled by NotificationContext
+      loadReceivedRequests();
+    });
+
+    // Listen for friend request accepted to refresh data
+    socket.on('friend_request_accepted', (data) => {
+      console.log('✅ FriendsPage: Friend request accepted, refreshing data');
+      // Only reload data, notification is handled by NotificationContext
+      loadFriends();
+      loadSentRequests();
+    });
+
+    // Listen for friend request declined to refresh data
+    socket.on('friend_request_declined', (data) => {
+      console.log('❌ FriendsPage: Friend request declined, refreshing data');
+      // Only reload data, notification is handled by NotificationContext
+      loadSentRequests();
+    });
+
+    return () => {
+      socket.off('friend_request_received');
+      socket.off('friend_request_accepted');
+      socket.off('friend_request_declined');
+    };
+  }, [socket, user]);
+
   const tabs = [
     { id: 'find', label: 'Tìm bạn', icon: FaUserPlus },
     { id: 'friends', label: 'Bạn bè', icon: FaUserFriends },
@@ -172,27 +211,50 @@ function FriendsPage() {
   ];
 
   const renderUserCard = (user, showActions = true) => (
-    <div key={user.id} className="bg-white rounded-lg p-4 shadow-sm border">
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
       <div className="flex items-center space-x-3">
-        <img
-          src={
-            user.friend_avatar ||
-            user.receiver_avatar ||
-            user.sender_avatar ||
-            user.avatar_url ||
-            'demo_avatar.jpg'
-          }
-          alt={
-            user.friend_name ||
-            user.receiver_name ||
-            user.sender_name ||
-            user.full_name ||
-            'User'
-          }
-          className="w-12 h-12 rounded-full object-cover"
-        />
+        <div className="relative">
+          <img
+            src={
+              user.friend_avatar ||
+              user.receiver_avatar ||
+              user.sender_avatar ||
+              user.avatar_url ||
+              'demo_avatar.jpg'
+            }
+            alt={
+              user.friend_name ||
+              user.receiver_name ||
+              user.sender_name ||
+              user.full_name ||
+              'User'
+            }
+            className="w-12 h-12 rounded-full object-cover"
+            onError={(e) => {
+              e.target.src = '/demo-avatar.svg';
+            }}
+          />
+          {/* Real-time online status indicator */}
+          {(() => {
+            const userId =
+              user.id || user.friend_id || user.sender_id || user.receiver_id;
+            if (!userId) return null;
+
+            const friendStatus = getFriendStatus(userId);
+            const isOnline = friendStatus.isOnline;
+
+            return (
+              isOnline && (
+                <div
+                  className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"
+                  title="Đang hoạt động"
+                />
+              )
+            );
+          })()}
+        </div>
         <div className="flex-1">
-          <h3 className="font-semibold text-gray-800">
+          <h3 className="font-semibold text-gray-800 dark:text-white">
             {user.friend_name ||
               user.receiver_name ||
               user.sender_name ||
@@ -202,12 +264,25 @@ function FriendsPage() {
               user.sender_email ||
               user.email}
           </h3>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
             {user.friend_email ||
               user.receiver_email ||
               user.sender_email ||
               user.email}
           </p>
+          {/* Real-time status text */}
+          {(() => {
+            const userId =
+              user.id || user.friend_id || user.sender_id || user.receiver_id;
+            if (!userId) return null;
+
+            const friendStatus = getFriendStatus(userId);
+            return (
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {friendStatus.isOnline ? '🟢 Đang hoạt động' : '⚫ Vắng mặt'}
+              </p>
+            );
+          })()}
         </div>
         {showActions && renderActions(user)}
       </div>
@@ -308,11 +383,17 @@ function FriendsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#FFFFFF] to-[#00A6FB] p-4">
+    <div
+      className={`min-h-screen p-4 ${
+        isDarkMode
+          ? 'bg-gradient-to-b from-gray-900 to-gray-800'
+          : 'bg-gradient-to-b from-[#FFFFFF] to-[#00A6FB]'
+      }`}
+    >
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
-          <h1 className="text-2xl font-bold text-gray-800 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6 border border-gray-200 dark:border-gray-700">
+          <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
             Quản lý bạn bè
           </h1>
 
@@ -340,26 +421,26 @@ function FriendsPage() {
 
         {/* Search (chỉ hiện ở tab tìm bạn) */}
         {activeTab === 'find' && (
-          <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6 border border-gray-200 dark:border-gray-700">
             <div className="relative">
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500" />
               <input
                 type="text"
                 placeholder="Tìm kiếm theo tên hoặc email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0582CA]"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0582CA] bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
               />
             </div>
           </div>
         )}
 
         {/* Content */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
           {loading ? (
             <div className="flex justify-center items-center py-8">
               <FaSpinner className="animate-spin text-[#0582CA] text-2xl mr-2" />
-              <span>Đang tải...</span>
+              <span className="text-gray-900 dark:text-white">Đang tải...</span>
             </div>
           ) : getCurrentData().length === 0 ? (
             <div className="text-center py-8 text-gray-500">
@@ -372,7 +453,11 @@ function FriendsPage() {
             </div>
           ) : (
             <div className="grid gap-4">
-              {getCurrentData().map((item) => renderUserCard(item))}
+              {getCurrentData().map((item) => (
+                <div key={item.id || item.friend_id || item.sender_id}>
+                  {renderUserCard(item)}
+                </div>
+              ))}
             </div>
           )}
         </div>

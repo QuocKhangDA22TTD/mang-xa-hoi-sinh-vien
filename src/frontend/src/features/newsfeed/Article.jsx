@@ -9,19 +9,20 @@ import {
   FaHeart,
   FaBookmark,
 } from 'react-icons/fa';
+import PostInteractions from '../../components/PostInteractions';
 
-function Article({ userName, userId, title, avatarUrl, createdAt, content }) {
+function Article({
+  postId,
+  userName,
+  userId,
+  title,
+  avatarUrl,
+  createdAt,
+  content,
+}) {
   const safeContent = DOMPurify.sanitize(content);
   const navigate = useNavigate();
-  const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [likeCount, setLikeCount] = useState(24);
-  const [showComments, setShowComments] = useState(false);
-
-  const handleLike = () => {
-    setLiked(!liked);
-    setLikeCount((prev) => (liked ? prev - 1 : prev + 1));
-  };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -78,43 +79,14 @@ function Article({ userName, userId, title, avatarUrl, createdAt, content }) {
         />
       </div>
 
-      {/* Engagement Stats */}
-      <div className="px-6 py-2 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-          <div className="flex items-center space-x-4">
-            <span className="flex items-center space-x-1">
-              <FaHeart className="w-4 h-4 text-red-500" />
-              <span>{likeCount} lượt thích</span>
-            </span>
-            <span>12 bình luận</span>
-            <span>3 chia sẻ</span>
-          </div>
-        </div>
+      {/* Post Interactions (Likes & Comments) */}
+      <div className="px-6">
+        <PostInteractions postId={postId} />
       </div>
 
-      {/* Action Buttons */}
+      {/* Additional Actions */}
       <div className="px-6 py-3 border-t border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-around">
-          <button
-            onClick={handleLike}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-              liked
-                ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30'
-                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-            }`}
-          >
-            <FaThumbsUp className={`w-5 h-5 ${liked ? 'text-blue-600' : ''}`} />
-            <span className="font-medium">Thích</span>
-          </button>
-
-          <button
-            onClick={() => setShowComments(!showComments)}
-            className="flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          >
-            <FaComment className="w-5 h-5" />
-            <span className="font-medium">Bình luận</span>
-          </button>
-
           <button className="flex items-center space-x-2 px-4 py-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
             <FaShare className="w-5 h-5" />
             <span className="font-medium">Chia sẻ</span>
@@ -132,54 +104,6 @@ function Article({ userName, userId, title, avatarUrl, createdAt, content }) {
           </button>
         </div>
       </div>
-
-      {/* Comments Section */}
-      {showComments && (
-        <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-          <div className="space-y-3">
-            <div className="flex space-x-3">
-              <img
-                className="w-8 h-8 rounded-full object-cover"
-                src="/demo_avatar.jpg"
-                alt="Commenter"
-              />
-              <div className="flex-1">
-                <div className="bg-white dark:bg-gray-700 rounded-lg px-3 py-2">
-                  <p className="text-sm text-gray-900 dark:text-white">
-                    <span className="font-semibold">Nguyễn Văn A</span> Bài viết
-                    rất hay!
-                  </p>
-                </div>
-                <div className="flex items-center space-x-4 mt-1 text-xs text-gray-500 dark:text-gray-400">
-                  <button className="hover:text-gray-700 dark:hover:text-gray-300">
-                    Thích
-                  </button>
-                  <button className="hover:text-gray-700 dark:hover:text-gray-300">
-                    Trả lời
-                  </button>
-                  <span>2 giờ trước</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Add Comment */}
-            <div className="flex space-x-3 mt-4">
-              <img
-                className="w-8 h-8 rounded-full object-cover"
-                src="/demo_avatar.jpg"
-                alt="Your avatar"
-              />
-              <div className="flex-1">
-                <input
-                  type="text"
-                  placeholder="Viết bình luận..."
-                  className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </article>
   );
 }

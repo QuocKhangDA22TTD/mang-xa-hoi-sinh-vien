@@ -1,11 +1,9 @@
 import ArticlesList from '../features/newsfeed/ArticlesList';
 import useUserProfile from '../hooks/useUserProfile';
-import { useLocation } from 'react-router-dom';
 import { FaEdit, FaImage, FaVideo, FaSmile } from 'react-icons/fa';
 
 function Newsfeed({ onCreatePost }) {
   const { profile, loading } = useUserProfile();
-  const location = useLocation();
 
   if (loading) {
     return (
@@ -65,7 +63,7 @@ function Newsfeed({ onCreatePost }) {
 
       {/* Posts Feed */}
       <div className="space-y-6">
-        <ArticlesList key={location.state?.refresh || 'default'} />
+        <ArticlesList />
       </div>
     </div>
   );

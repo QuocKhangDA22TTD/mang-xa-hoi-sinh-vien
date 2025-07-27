@@ -92,4 +92,12 @@ router.put(
   conversationsController.updateGroupInfo
 );
 
+// Upload group avatar
+router.put(
+  '/conversations/:conversationId/avatar',
+  verifyToken,
+  upload.single('avatar'),
+  conversationsController.updateGroupInfo
+);
+
 module.exports = router;

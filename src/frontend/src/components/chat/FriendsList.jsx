@@ -1,5 +1,6 @@
 import { memo } from 'react';
 import { FaCircle, FaUserFriends } from 'react-icons/fa';
+import { useSocket } from '../../context/SocketContext';
 
 const FriendsList = memo(function FriendsList({
   friends,
@@ -12,15 +13,8 @@ const FriendsList = memo(function FriendsList({
   avatarSize = 'medium',
   variant = 'default',
 }) {
+  const { getFriendStatus } = useSocket();
   const handleClick = onFriendClick || onSelect;
-
-  const handleFriendClick = (friendData) => {
-    console.log('🔍 FriendsList - Friend clicked:', friendData);
-    console.log('🔍 FriendsList - handleClick function:', typeof handleClick);
-    if (handleClick) {
-      handleClick(friendData);
-    }
-  };
 
   const avatarSizeClasses = {
     small: 'w-8 h-8',
@@ -95,7 +89,7 @@ const FriendsList = memo(function FriendsList({
       }
     }
 
-    // Handle avatar URL
+    // Handle avatar URL - prioritize profile avatar
     let avatarUrl = friend.friend_avatar || friend.avatar_url || friend.avatar;
     if (
       avatarUrl &&
@@ -109,6 +103,8 @@ const FriendsList = memo(function FriendsList({
     return {
       id: friend.friend_id || friend.id,
       name: friend.friend_name || friend.name || friend.full_name,
+      nickname: friend.friend_nickname || friend.nickname,
+      full_name: friend.friend_name || friend.full_name,
       email: friend.friend_email || friend.email,
       avatar: avatarUrl,
       status: status,
@@ -131,7 +127,14 @@ const FriendsList = memo(function FriendsList({
         return (
           <div
             key={`friend-${friendData.id}`}
-            onClick={() => handleFriendClick(friendData)}
+            onClick={() => {
+              console.log('🔍 FriendsList - Friend clicked:', friendData);
+              console.log(
+                '🔍 FriendsList - handleClick function:',
+                handleClick
+              );
+              handleClick?.(friendData);
+            }}
             className={`flex items-center space-x-3 ${itemClasses[variant]} rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors`}
           >
             <div className="relative">
@@ -143,17 +146,34 @@ const FriendsList = memo(function FriendsList({
                   e.target.src = '/demo-avatar.svg';
                 }}
               />
-              {friendData.status === 'online' && (
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"></div>
-              )}
+              {(() => {
+                const friendStatus = getFriendStatus(friendData.id);
+                const isOnline = friendStatus.isOnline;
+
+                return (
+                  isOnline && (
+                    <div
+                      className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white dark:border-gray-800 rounded-full"
+                      title="Đang hoạt động"
+                    />
+                  )
+                );
+              })()}
             </div>
 
             <div className="flex-1 min-w-0">
               <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                {friendData.name || friendData.email || 'Người dùng'}
+                {friendData.full_name ||
+                  friendData.nickname ||
+                  friendData.name ||
+                  friendData.email ||
+                  'Người dùng'}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {friendData.status === 'online' ? 'Đang hoạt động' : 'Vắng mặt'}
+                {(() => {
+                  const friendStatus = getFriendStatus(friendData.id);
+                  return friendStatus.isOnline ? 'Đang hoạt động' : 'Vắng mặt';
+                })()}
               </p>
             </div>
 
