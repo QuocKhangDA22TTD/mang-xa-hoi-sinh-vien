@@ -11,7 +11,7 @@ export async function getMe() {
 }
 
 export async function logout() {
-  const res = await fetch('http://localhost:5000/api/auth/logout', {
+  const res = await fetch('https://mang-xa-hoi-sinh-vien-production.up.railway.app:50024/api/auth/logout', {
     method: 'POST',
     credentials: 'include',
   });

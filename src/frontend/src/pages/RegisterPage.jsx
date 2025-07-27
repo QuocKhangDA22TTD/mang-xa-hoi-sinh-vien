@@ -16,7 +16,7 @@ function RegisterPage() {
     }
 
     try {
-      const res = await fetch('http://localhost:5000/api/auth/register', {
+      const res = await fetch('https://mang-xa-hoi-sinh-vien-production.up.railway.app:50024/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
