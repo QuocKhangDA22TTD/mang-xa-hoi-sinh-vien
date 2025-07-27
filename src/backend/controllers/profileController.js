@@ -91,7 +91,7 @@ exports.uploadAvatar = async (req, res) => {
     }
 
     const user_id = req.user.id;
-    const avatar_url = `http://localhost:5000/uploads/${req.file.filename}`;
+    const avatar_url = `https://daring-embrace-production.up.railway.app/uploads/${req.file.filename}`;
 
     // Cập nhật avatar_url trong database
     let profile = await profileModel.getProfileByUserId(user_id);
@@ -139,7 +139,7 @@ exports.uploadBanner = async (req, res) => {
     }
 
     const user_id = req.user.id;
-    const banner_url = `http://localhost:5000/uploads/${req.file.filename}`;
+    const banner_url = `https://daring-embrace-production.up.railway.app/uploads/${req.file.filename}`;
 
     // Cập nhật banner_url trong database
     let profile = await profileModel.getProfileByUserId(user_id);

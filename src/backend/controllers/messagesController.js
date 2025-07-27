@@ -25,7 +25,7 @@ exports.sendMessage = async (req, res) => {
 
   // Handle file upload if present
   if (req.file) {
-    attachment_url = `http://localhost:5000/uploads/${req.file.filename}`;
+    attachment_url = `https://daring-embrace-production.up.railway.app/uploads/${req.file.filename}`;
     console.log('🔍 File uploaded:', attachment_url);
   }
 
