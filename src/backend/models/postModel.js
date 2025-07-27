@@ -13,6 +13,7 @@ exports.getAllPosts = async () => {
   const [rows] = await db.execute(`
     SELECT 
       posts.id,
+      posts.user_id,
       posts.title,
       posts.content,
       posts.created_at,

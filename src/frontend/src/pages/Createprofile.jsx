@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 
 const Button = ({ children, onClick, className }) => (
   <button onClick={onClick} className={className}>
@@ -15,39 +15,46 @@ const Input = ({ value, onChange, className, placeholder }) => (
   />
 );
 
-const Avatar = ({ className, src, onImageChange }) => (
-  <div className={className}>
-    <img
-      src={src}
-      alt="avatar"
-      className="w-full h-full object-cover rounded-full"
-    />
-    <input
-      type="file"
-      accept="image/*"
-      onChange={onImageChange}
-      className="hidden"
-      id="avatar-upload"
-    />
-  </div>
-);
-
 function CreateProfile() {
-  const [name, setName] = useState('');
-  const [nickname, setNickname] = useState('');
-  const [birthday, setBirthday] = useState('');
-  const [address, setAddress] = useState('');
-  const [bio, setBio] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('/default-avatar.png');
+  const [profile, setProfile] = useState({
+    full_name: '',
+    nickname: '',
+    birthday: '',
+    address: '',
+    bio: '',
+    avatar_url: '',
+    banner_url: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [bannerPreview, setBannerPreview] = useState(null);
+
+  const navigate = useNavigate();
+  const avatarInputRef = useRef(null);
+  const bannerInputRef = useRef(null);
 
   const handleAvatarChange = (event) => {
+    console.log('🔍 Avatar change triggered:', event.target.files);
     const file = event.target.files[0];
     if (file) {
+      console.log('✅ File selected:', file.name, file.type, file.size);
       const reader = new FileReader();
       reader.onload = (e) => {
+        console.log('✅ File read successfully');
         setAvatarUrl(e.target.result);
       };
       reader.readAsDataURL(file);
+    } else {
+      console.log('❌ No file selected');
+    }
+  };
+
+  const handleUploadClick = () => {
+    console.log('🔍 Upload button clicked');
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
   };
 
@@ -65,8 +72,27 @@ function CreateProfile() {
         {/* Avatar Area */}
         <div className="relative flex justify-center -mt-16">
           <div className="relative w-[120px] h-[120px]">
-            <Avatar src={avatarUrl} onImageChange={handleAvatarChange} className="avatar-image w-full h-full border-4 border-white" />
-            <label htmlFor="avatar-upload" className="avatar-upload-button absolute bottom-0 right-0 w-[28px] h-[28px] bg-[#1877f2] text-white flex items-center justify-center rounded-full cursor-pointer">+</label>
+            <div className="avatar-image w-full h-full border-4 border-white">
+              <img
+                src={avatarUrl}
+                alt="avatar"
+                className="w-full h-full object-cover rounded-full"
+              />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                className="hidden"
+              />
+            </div>
+            <button
+              onClick={handleUploadClick}
+              type="button"
+              className="avatar-upload-button absolute bottom-0 right-0 w-[28px] h-[28px] bg-[#1877f2] text-white flex items-center justify-center rounded-full cursor-pointer hover:bg-[#166fe5] transition-colors"
+            >
+              +
+            </button>
           </div>
         </div>
 
@@ -114,7 +140,9 @@ function CreateProfile() {
 
         {/* Bio Box */}
         <div className="bio-box bg-[#e0d8d7] rounded-[8px] px-6 py-4 mx-8 mt-6 relative">
-          <label className="bio-label block text-sm font-medium text-gray-700 mb-1">Tiểu sử</label>
+          <label className="bio-label block text-sm font-medium text-gray-700 mb-1">
+            Tiểu sử
+          </label>
           <textarea
             value={bio}
             onChange={(e) => setBio(e.target.value)}

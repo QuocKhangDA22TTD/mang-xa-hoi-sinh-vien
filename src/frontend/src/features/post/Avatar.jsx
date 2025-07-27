@@ -1,10 +1,10 @@
 function Avatar({ avatarUrl }) {
   return (
-    <div className="w-[3.5rem] h-[3.5rem] rounded-[100%] border-[2px] border-[#FFFFFF] shadow-[0_4px_8px_4px_rgba(0,0,0,0.25)]">
+    <div className="w-12 h-12 rounded-full ring-2 ring-gray-200 dark:ring-gray-600 overflow-hidden">
       <img
-        src={avatarUrl}
+        src={avatarUrl || '/demo_avatar.jpg'}
         alt="avatar"
-        className="w-[100%] h-[100%] rounded-[100%]"
+        className="w-full h-full object-cover"
       />
     </div>
   );

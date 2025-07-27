@@ -14,11 +14,21 @@ exports.createProfile = async (
   avatar_url,
   nickname,
   birthday,
-  address
+  address,
+  banner_url = null
 ) => {
   await db.query(
-    'INSERT INTO profile (user_id, full_name, bio, avatar_url, nickname, birthday, address) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    [user_id, full_name, bio, avatar_url, nickname, birthday, address]
+    'INSERT INTO profile (user_id, full_name, bio, avatar_url, nickname, birthday, address, banner_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+    [
+      user_id,
+      full_name,
+      bio,
+      avatar_url,
+      nickname,
+      birthday,
+      address,
+      banner_url,
+    ]
   );
 };
 
@@ -29,10 +39,20 @@ exports.updateProfile = async (
   avatar_url,
   nickname,
   birthday,
-  address
+  address,
+  banner_url = null
 ) => {
   await db.query(
-    'UPDATE profile SET full_name = ?, bio = ?, avatar_url = ?, nickname = ?, birthday = ?, address = ? WHERE user_id = ?',
-    [full_name, bio, avatar_url, nickname, birthday, address, user_id]
+    'UPDATE profile SET full_name = ?, bio = ?, avatar_url = ?, nickname = ?, birthday = ?, address = ?, banner_url = ? WHERE user_id = ?',
+    [
+      full_name,
+      bio,
+      avatar_url,
+      nickname,
+      birthday,
+      address,
+      banner_url,
+      user_id,
+    ]
   );
 };

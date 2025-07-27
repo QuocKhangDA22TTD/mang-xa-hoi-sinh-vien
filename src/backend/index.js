@@ -11,7 +11,10 @@ const chatRoutes = require('./routes/chat.routes');
 const postRoutes = require('./routes/postRoutes');
 const profileRoutes = require('./routes/profileRoutes');
 const friendRoutes = require('./routes/friend.routes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const postInteractionRoutes = require('./routes/postInteractionRoutes');
 const setupSocket = require('./sockets/socket');
+const userStatusService = require('./services/userStatusService');
 
 const app = express();
 const server = http.createServer(app); // dùng server http để tích hợp socket.io
@@ -29,13 +32,6 @@ app.use(
 
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.use('/api/posts', postRoutes);
-app.use('/api/upload', uploadRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/chat', chatRoutes);
-app.use('/api/friends', friendRoutes);
-app.use('/api/profile', profileRoutes);
-
 // Khởi chạy socket.io
 const io = require('socket.io')(server, {
   cors: {
@@ -44,6 +40,26 @@ const io = require('socket.io')(server, {
     credentials: true,
   },
 });
+
+// Make io available to routes
+app.set('io', io);
+
+// Middleware to add io to request object
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
+// Routes (after io middleware)
+app.use('/api/posts', postRoutes);
+app.use('/api/posts', postInteractionRoutes); // Post interactions (likes, comments)
+app.use('/api/upload', uploadRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/chat', chatRoutes);
+app.use('/api/friend', friendRoutes);
+app.use('/api/profile', profileRoutes);
+app.use('/api/notifications', notificationRoutes);
+
 setupSocket(io); // gọi file socket.js
 
 const PORT = process.env.PORT || 5000;

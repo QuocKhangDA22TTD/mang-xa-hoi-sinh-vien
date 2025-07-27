@@ -54,6 +54,20 @@ exports.login = async (req, res) => {
       expiresIn: '1h',
     });
 
+    // Update user online status
+    try {
+      await db.execute(
+        `UPDATE users
+         SET last_active = CURRENT_TIMESTAMP, is_online = TRUE
+         WHERE id = ?`,
+        [user.id]
+      );
+      console.log(`🟢 User ${user.id} set online`);
+    } catch (statusError) {
+      console.error('Error updating user status:', statusError);
+      // Don't block login if status update fails
+    }
+
     res.cookie('token', token, {
       httpOnly: false,
       secure: false, // đặt true nếu dùng HTTPS
@@ -71,11 +85,70 @@ exports.login = async (req, res) => {
   }
 };
 
-exports.logout = (req, res) => {
+exports.logout = async (req, res) => {
+  // Set user offline if authenticated
+  if (req.user && req.user.id) {
+    try {
+      await db.execute(
+        `UPDATE users
+         SET is_online = FALSE, last_active = CURRENT_TIMESTAMP
+         WHERE id = ?`,
+        [req.user.id]
+      );
+    } catch (statusError) {
+      console.error('Error updating user status:', statusError);
+    }
+  }
+
   res.clearCookie('token', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'Lax',
   });
   res.json({ message: 'Logged out successfully' });
+};
+
+// Set user offline (for page unload events)
+exports.setOffline = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID required' });
+    }
+
+    await db.execute(
+      `UPDATE users
+       SET is_online = FALSE, last_active = CURRENT_TIMESTAMP
+       WHERE id = ?`,
+      [userId]
+    );
+
+    console.log(`🔴 Set user ${userId} offline (page unload)`);
+    res.json({ message: 'User set offline' });
+  } catch (error) {
+    console.error('Error setting user offline:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Heartbeat to keep user online
+exports.heartbeat = async (req, res) => {
+  try {
+    if (!req.user || !req.user.id) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+
+    await db.execute(
+      `UPDATE users
+       SET last_active = CURRENT_TIMESTAMP, is_online = TRUE
+       WHERE id = ?`,
+      [req.user.id]
+    );
+
+    res.json({ message: 'Heartbeat received' });
+  } catch (error) {
+    console.error('Error updating heartbeat:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
