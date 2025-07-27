@@ -34,7 +34,7 @@ function CreateProfile() {
   const checkExistingProfile = async () => {
     try {
       const user = await getMe();
-      const response = await fetch(`http://localhost:5000/api/profile/${user.id}`, {
+      const response = await fetch(`https://daring-embrace-production.up.railway.app/api/profile/${user.id}`, {
         credentials: 'include'
       });
       
@@ -71,7 +71,7 @@ function CreateProfile() {
 
     try {
       const method = isEdit ? 'PUT' : 'POST';
-      const response = await fetch('http://localhost:5000/api/profile', {
+      const response = await fetch('https://daring-embrace-production.up.railway.app/api/profile', {
         method,
         headers: {
           'Content-Type': 'application/json',

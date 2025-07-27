@@ -11,7 +11,7 @@ function LoginPage() {
 
   const handleLogin = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/auth/login', {
+      const res = await fetch('https://daring-embrace-production.up.railway.app/api/auth/login', {
         method: 'POST',
         credentials: 'include',
         headers: {

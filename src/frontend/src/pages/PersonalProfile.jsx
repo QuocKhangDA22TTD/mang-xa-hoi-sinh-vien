@@ -33,7 +33,7 @@ function PersonalProfile() {
         setIsOwnProfile(!userId || userId === currentUser.id.toString());
 
         const response = await fetch(
-          `http://localhost:5000/api/profile/${targetUserId}`,
+          `https://daring-embrace-production.up.railway.app/api/profile/${targetUserId}`,
           {
             method: 'GET',
             headers: {
@@ -52,7 +52,7 @@ function PersonalProfile() {
 
         // Fetch posts
         const postsResponse = await fetch(
-          `http://localhost:5000/api/posts/user/${targetUserId}`,
+          `https://daring-embrace-production.up.railway.app/api/posts/user/${targetUserId}`,
           {
             method: 'GET',
             headers: {

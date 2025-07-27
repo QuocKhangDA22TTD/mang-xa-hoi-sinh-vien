@@ -37,11 +37,11 @@ function ChatHeader({ conversation, onGroupManage }) {
         conversationId: conversation.id,
         avatar,
         fullUrl: avatar
-          ? `http://localhost:5000${avatar}`
+          ? `https://daring-embrace-production.up.railway.app${avatar}`
           : '/group-avatar.svg',
       });
 
-      return avatar ? `http://localhost:5000${avatar}` : '/group-avatar.svg';
+      return avatar ? `https://daring-embrace-production.up.railway.app${avatar}` : '/group-avatar.svg';
     }
 
     if (conversation.members && conversation.members.length > 0) {
@@ -52,7 +52,7 @@ function ChatHeader({ conversation, onGroupManage }) {
         otherMember,
         avatar_url: otherMember.avatar_url,
         fullUrl: otherMember.avatar_url
-          ? `http://localhost:5000${otherMember.avatar_url}`
+          ? `https://daring-embrace-production.up.railway.app${otherMember.avatar_url}`
           : '/demo-avatar.svg',
       });
 
@@ -69,7 +69,7 @@ function ChatHeader({ conversation, onGroupManage }) {
 
       // If avatar is just filename, prepend server URL
       if (avatar.startsWith('/uploads/')) {
-        return `http://localhost:5000${avatar}`;
+        return `https://daring-embrace-production.up.railway.app${avatar}`;
       }
 
       // For demo avatars or other filenames
@@ -78,7 +78,7 @@ function ChatHeader({ conversation, onGroupManage }) {
       }
 
       // Default case: prepend server URL
-      return `http://localhost:5000/uploads/${avatar}`;
+      return `https://daring-embrace-production.up.railway.app/uploads/${avatar}`;
     }
 
     return '/demo-avatar.svg';

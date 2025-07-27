@@ -23,7 +23,7 @@ export function AuthProvider({ children }) {
     const heartbeatInterval = setInterval(
       () => {
         if (!document.hidden) {
-          fetch('http://localhost:5000/api/auth/heartbeat', {
+          fetch('https://daring-embrace-production.up.railway.app/api/auth/heartbeat', {
             method: 'POST',
             credentials: 'include',
           }).catch(console.error);
@@ -35,7 +35,7 @@ export function AuthProvider({ children }) {
     const handleBeforeUnload = () => {
       // Use sendBeacon for reliable offline status update
       navigator.sendBeacon(
-        'http://localhost:5000/api/auth/set-offline',
+        'https://daring-embrace-production.up.railway.app/api/auth/set-offline',
         JSON.stringify({ userId: user.id })
       );
     };
@@ -45,7 +45,7 @@ export function AuthProvider({ children }) {
         // User switched tab or minimized - set offline after delay
         setTimeout(() => {
           if (document.hidden) {
-            fetch('http://localhost:5000/api/auth/set-offline', {
+            fetch('https://daring-embrace-production.up.railway.app/api/auth/set-offline', {
               method: 'POST',
               credentials: 'include',
               headers: { 'Content-Type': 'application/json' },

@@ -14,7 +14,7 @@ export const SocketProvider = ({ children }) => {
     if (user) {
       console.log('🔍 Connecting to socket for user:', user.id);
 
-      const newSocket = io('http://localhost:5000', {
+      const newSocket = io('https://daring-embrace-production.up.railway.app', {
         withCredentials: true,
       });
 

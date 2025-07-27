@@ -1,5 +1,5 @@
 export async function getProfileByUserId(userId) {
-  const res = await fetch(`http://localhost:5000/api/profile/${userId}`, {
+  const res = await fetch(`https://daring-embrace-production.up.railway.app/api/profile/${userId}`, {
     credentials: 'include',
   });
 

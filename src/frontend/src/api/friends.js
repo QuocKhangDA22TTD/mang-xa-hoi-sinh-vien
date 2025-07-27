@@ -1,6 +1,6 @@
 // src/api/friends.js
 
-const API_BASE = 'http://localhost:5000/api/friend';
+const API_BASE = 'https://daring-embrace-production.up.railway.app/api/friend';
 
 // Lấy danh sách bạn bè
 export async function getFriends() {

@@ -38,7 +38,7 @@ function CreatePostPage() {
     };
 
     try {
-      const res = await fetch('http://localhost:5000/api/posts', {
+      const res = await fetch('https://daring-embrace-production.up.railway.app/api/posts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -73,7 +73,7 @@ function CreatePostPage() {
     formData.append('image', file); // key 'image' phải giống tên trong upload.single('image')
 
     try {
-      const res = await fetch('http://localhost:5000/api/upload', {
+      const res = await fetch('https://daring-embrace-production.up.railway.app/api/upload', {
         method: 'POST',
         body: formData, // KHÔNG có headers 'Content-Type' (để fetch tự thêm multipart)
       });
