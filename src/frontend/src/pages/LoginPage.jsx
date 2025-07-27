@@ -2,12 +2,15 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../components/Button';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { getMe } from '../api/auth';
 
 function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
+  const { setUser } = useAuth();
 
   const handleLogin = async () => {
     try {
@@ -27,6 +30,14 @@ function LoginPage() {
       setMessage('Đăng nhập thành công!');
       setEmail('');
       setPassword('');
+
+      // ✅ Cập nhật user trong AuthContext
+      try {
+        const userData = await getMe();
+        setUser(userData);
+      } catch (error) {
+        console.error('Error getting user data:', error);
+      }
 
       // ✅ Chuyển hướng sau khi đăng nhập
       setTimeout(() => {
